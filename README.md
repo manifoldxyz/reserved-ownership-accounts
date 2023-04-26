@@ -34,7 +34,7 @@ The registry has two functions:
 - `createAccount` - deploys a smart contract account for a user given an `implementation` address, salt, and signed message from the external service
 - `account` - a read-only function that computes the smart contract account address for a user given an `implementation` address and salt
 
-The registry SHALL deploy each token bound account as an [ERC-1967](./eip-1967.md) proxy.
+The registry SHALL deploy each account as an [ERC-1167](https://eips.ethereum.org/EIPS/eip-1167) proxy.
 
 Each proxy deployed by the registry SHALL have the following interface:
 
@@ -110,9 +110,9 @@ interface IAccountRegistry {
 
 All accounts SHOULD be created via the registry.
 
-All account implementations MUST implement [ERC-165](./eip-165.md) interface detection.
+All account implementations MUST implement [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface detection.
 
-All account implementations MUST implement [ERC-1271](./eip-1271.md) signature validation.
+All account implementations MUST implement [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) signature validation.
 
 All account implementations MUST implement the following interface:
 
