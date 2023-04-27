@@ -12,7 +12,7 @@ requires: <EIP number(s)> # Only required when you reference an EIP in the `Spec
 
 ## Abstract
 
-The following specifies a system for external services to provide their users with smart contract accounts. With a signed message from the external service, users can deploy smart contract accounts through a registry at a deterministic address using the `create2` opcode, at which point the external service no longer maintains any control over the address. 
+The following specifies a system for external services to provide their users with smart contract accounts. With a signed message from the external service, users can deploy smart contract accounts through a registry at a deterministic address using the `create2` opcode, at which point the external service no longer maintains any control over the address.
 
 ## Motivation
 
@@ -40,7 +40,7 @@ Each proxy deployed by the registry SHALL have the following interface:
 
 ```solidity
 interface IAccountProxy {
-    function implementation() external view returns (address);
+  function implementation() external view returns (address);
 }
 ```
 
@@ -118,38 +118,37 @@ All account implementations MUST implement the following interface:
 
 ```solidity
 interface IAccount {
-    /// @dev Accounts MUST implement a `receive` function.
-    ///
-    /// Accounts MAY perform arbitrary logic to restrict conditions
-    /// under which Ether can be received.
-    receive() external payable;
+  /// @dev Accounts MUST implement a `receive` function.
+  ///
+  /// Accounts MAY perform arbitrary logic to restrict conditions
+  /// under which Ether can be received.
+  receive() external payable;
 
-    /// @dev Executes `call` on address `to`, with value `value` and calldata
-    /// `data`.
-    ///
-    /// MUST revert and bubble up errors if call fails.
-    ///
-    /// By default, accounts MUST allow the current owner to execute arbitrary
-    /// calls using `executeCall`.
-    ///
-    /// @return The result of the call
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable returns (bytes memory);
+  /// @dev Executes `call` on address `to`, with value `value` and calldata
+  /// `data`.
+  ///
+  /// MUST revert and bubble up errors if call fails.
+  ///
+  /// By default, accounts MUST allow the current owner to execute arbitrary
+  /// calls using `executeCall`.
+  ///
+  /// @return The result of the call
+  function executeCall(
+    address to,
+    uint256 value,
+    bytes calldata data
+  ) external payable returns (bytes memory);
 
+  /// @dev Returns the current owner of the account.
+  ///
+  /// @return Address of the account owner
+  function owner() external view returns (address);
 
-    /// @dev Returns the current owner of the account.
-    ///
-    /// @return Address of the account owner
-    function owner() external view returns (address);
-
-    /// @dev Accounts SHOULD implement a `setOwner` function which updates the
-    /// address that has permission to call `executeCall`.
-    ///
-    /// Only callable by the owner of the account.
-    function setOwner() onlyOwner external;
+  /// @dev Accounts SHOULD implement a `setOwner` function which updates the
+  /// address that has permission to call `executeCall`.
+  ///
+  /// Only callable by the owner of the account.
+  function setOwner(address newOwner) external onlyOwner;
 }
 ```
 

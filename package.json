@@ -1,0 +1,17 @@
+{
+  "name": "@manifoldxyz/deferred-custody-accounts",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "forge test",
+    "prettier": "prettier --write '{**/*,*}.{js,ts,tsx,md,mdx,yml,sol}'",
+    "format": "prettier -c '{**/*,*}.{js,ts,tsx,md,mdx,yml,sol}'",
+    "lint": "solhint -w 0 'src/**/*.sol'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "prettier-plugin-solidity": "^1.1.3",
+    "solhint": "^3.4.1"
+  }
+}
