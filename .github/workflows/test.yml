@@ -1,9 +1,9 @@
 name: Test
-on: 
+on:
   workflow_dispatch: {}
   push:
-      branches:
-        - main
+    branches:
+      - main
 
 env:
   FOUNDRY_PROFILE: ci
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: true
 
-    name: Deferred Custoduy Accounts Tests
+    name: Deferred Custody Accounts Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

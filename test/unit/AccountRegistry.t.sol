@@ -37,7 +37,7 @@ contract AccountRegistryTest is Test {
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -62,7 +62,7 @@ contract AccountRegistryTest is Test {
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", msg.sender, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -88,7 +88,33 @@ contract AccountRegistryTest is Test {
         bytes32 salt = "1";
         uint256 expiration = block.timestamp - 1;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            chainId,
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+    
+    function testCreateAccount_RevertWhen_DifferentMessageAccount() public {
+        uint256 chainId = 1;
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", vm.addr(2), salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -109,12 +135,38 @@ contract AccountRegistryTest is Test {
         );
     }
 
-    function testCreateAccount_RevertWhen_DifferentMessage() public {
+    function testCreateAccount_RevertWhen_DifferentMessageSalt() public {
         uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, block.timestamp)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, "2", expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            chainId,
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_RevertWhen_DifferentMessageExpiration() public {
+        uint256 chainId = 1;
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, block.timestamp)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -140,7 +192,7 @@ contract AccountRegistryTest is Test {
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -169,7 +221,7 @@ contract AccountRegistryTest is Test {
 
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({

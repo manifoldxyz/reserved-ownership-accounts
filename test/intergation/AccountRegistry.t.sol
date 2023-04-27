@@ -32,7 +32,7 @@ contract AccountRegistryTest is Test {
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", accountOwner, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -42,7 +42,7 @@ contract AccountRegistryTest is Test {
         });
 
         vm.prank(accountOwner);
-        
+
         AccountUpgradeable account = AccountUpgradeable(
             payable(
                 registry.createAccount(

@@ -26,7 +26,7 @@ contract AccountRegistry is Ownable, IAccountRegistry {
         AuthorizationParams calldata auth,
         bytes calldata initData
     ) external returns (address) {
-        _verify(auth);
+        _verify(salt, auth);
 
         bytes memory code = AccountBytecode.createCode(implementation, chainId);
 
@@ -59,9 +59,9 @@ contract AccountRegistry is Ownable, IAccountRegistry {
         signer = newSigner;
     }
 
-    function _verify(AuthorizationParams calldata auth) internal view {
+    function _verify(bytes32 salt, AuthorizationParams calldata auth) internal view {
         bytes32 expectedMessage = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n52", msg.sender, auth.expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender, salt, auth.expiration)
         );
         address messageSigner = auth.message.recover(auth.signature);
 
