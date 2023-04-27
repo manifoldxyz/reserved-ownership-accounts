@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+/// @author: manifold.xyz
+
 import {Create2} from "openzeppelin/utils/Create2.sol";
 import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";

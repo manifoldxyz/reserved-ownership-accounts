@@ -2,23 +2,22 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC1967Proxy} from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import {AccountProxy} from "../../src/AccountProxy.sol";
 import {AccountUpgradeable} from "../../src/AccountUpgradeable.sol";
 
 contract AccountUpgradeableTest is Test {
     AccountUpgradeable internal accountUpgradeable;
-    ERC1967Proxy internal accountProxy;
+    AccountProxy internal accountProxy;
     address internal accountOwner;
     bytes internal data;
 
     function setUp() public {
         accountOwner = vm.addr(1);
         accountUpgradeable = new AccountUpgradeable();
+        accountProxy = new AccountProxy();
+        data = abi.encodeWithSignature("initialize(address)", accountOwner);
         vm.prank(accountOwner);
-        accountProxy = new ERC1967Proxy(
-            address(accountUpgradeable),
-            abi.encodeWithSignature("initialize()")
-        );
+        accountProxy.initialize(address(accountUpgradeable), data);
     }
 
     function testOwner() public {
@@ -48,7 +47,7 @@ contract AccountUpgradeableTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert("Already initialized");
 
-        AccountUpgradeable(payable(accountProxy)).initialize();
+        accountProxy.initialize(address(accountUpgradeable), data);
     }
 
     function testExecuteCall() public {
@@ -73,19 +72,9 @@ contract AccountUpgradeableTest is Test {
         address newImplementation = address(new AccountUpgradeable());
         vm.prank(accountOwner);
 
-        AccountUpgradeable(payable(accountProxy)).upgrade(newImplementation);
-        address implementation = address(
-            uint160(
-                uint256(
-                    vm.load(
-                        address(accountProxy),
-                        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
-                    )
-                )
-            )
-        );
+        accountProxy.upgrade(newImplementation);
 
-        assertEq(implementation, address(newImplementation));
+        assertEq(accountProxy.implementation(), address(newImplementation));
     }
 
     function testUpgrade_RevertWhen_SenderNotOwner() public {
@@ -93,6 +82,6 @@ contract AccountUpgradeableTest is Test {
         vm.prank(vm.addr(2));
         vm.expectRevert("Caller is not owner");
 
-        AccountUpgradeable(payable(accountProxy)).upgrade(newImplementation);
+        accountProxy.upgrade(newImplementation);
     }
 }

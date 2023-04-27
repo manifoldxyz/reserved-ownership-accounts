@@ -2,17 +2,16 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {Account as AccountImplementation} from "../../src/Account.sol";
+import {AccountUpgradeable} from "../../src/AccountUpgradeable.sol";
 
 contract AccountTest is Test {
-    AccountImplementation internal account;
+    AccountUpgradeable internal account;
     address internal accountOwner;
 
     function setUp() public {
         accountOwner = vm.addr(1);
-        account = new AccountImplementation();
-        vm.prank(accountOwner);
-        account.initialize();
+        account = new AccountUpgradeable();
+        account.initialize(accountOwner);
     }
 
     function testOwner() public {
@@ -42,7 +41,7 @@ contract AccountTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert("Already initialized");
 
-        account.initialize();
+        account.initialize(accountOwner);
     }
 
     function testExecuteCall() public {

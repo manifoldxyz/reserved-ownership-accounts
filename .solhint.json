@@ -7,6 +7,7 @@
     "no-inline-assembly": "off",
     "no-empty-blocks": "off",
     "func-name-mixedcase": "off",
-    "not-rely-on-time": "off"
+    "not-rely-on-time": "off",
+    "no-console": "off"
   }
 }
