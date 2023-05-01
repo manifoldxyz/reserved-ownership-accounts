@@ -12,6 +12,8 @@ import {ERC1167ProxyBytecode} from "./lib/ERC1167ProxyBytecode.sol";
 contract AccountRegistryFactory is IAccountRegistryFactory {
     using Address for address;
 
+    error InitializationFailed();
+
     function createRegistry(address implementation, uint256 index) external returns (address) {
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation, msg.sender, index);
         bytes32 salt = bytes32(index);
@@ -21,6 +23,11 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         if (_registry.isDeployed()) return _registry;
 
         _registry = Create2.deploy(0, salt, code);
+
+        (bool success, ) = _registry.call(
+            abi.encodeWithSignature("initialize(address)", msg.sender)
+        );
+        if (!success) revert InitializationFailed();
 
         emit AccountRegistryCreated(_registry, implementation, index);
 

@@ -384,4 +384,10 @@ contract AccountRegistryTest is Test {
 
         assertEq(created, account);
     }
+
+    function test_Initialize_Reverts() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+
+        registry.initialize(accountOwner);
+    }
 }

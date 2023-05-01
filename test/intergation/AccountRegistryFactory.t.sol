@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {console} from "forge-std/console.sol";
+import {Test} from "forge-std/Test.sol";
+import {IAccountRegistry} from "../../src/interfaces/IAccountRegistry.sol";
+import {AccountRegistry} from "../../src/AccountRegistry.sol";
+import {AccountRegistryFactory} from "../../src/AccountRegistryFactory.sol";
+import {ERC1967AccountProxy} from "../../src/examples/upgradeable/ERC1967AccountProxy.sol";
+import {ERC1967AccountImplementation} from "../../src/examples/upgradeable/ERC1967AccountImplementation.sol";
+import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
+
+contract AccountRegistryFactoryTest is Test {
+    AccountRegistry internal registry;
+    AccountRegistryFactory internal factory;
+    ERC1967AccountImplementation internal implementation;
+    ERC1967AccountProxy internal proxy;
+    address internal deployer;
+    address internal signer;
+    uint256 internal signerPrivateKey;
+    address internal accountOwner;
+
+    function setUp() public {
+        signerPrivateKey = 0x1337;
+        signer = vm.addr(signerPrivateKey);
+        deployer = vm.addr(1);
+        accountOwner = vm.addr(2);
+        registry = new AccountRegistry();
+        factory = new AccountRegistryFactory();
+        implementation = new ERC1967AccountImplementation();
+        proxy = new ERC1967AccountProxy();
+    }
+
+    function testCreateRegistryAndAccount() public {
+        uint256 index = 1;
+
+        vm.startPrank(deployer);
+        AccountRegistry newRegistry = AccountRegistry(
+            payable(factory.createRegistry(address(registry), index))
+        );
+        newRegistry.setSigner(signer);
+        vm.stopPrank();
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+
+        ERC1967AccountImplementation account = ERC1967AccountImplementation(
+            payable(
+                newRegistry.createAccount(
+                    address(proxy),
+                    salt,
+                    auth,
+                    abi.encodeWithSignature(
+                        "initialize(address,bytes)",
+                        address(implementation),
+                        abi.encodeWithSignature("initialize(address)", accountOwner)
+                    )
+                )
+            )
+        );
+
+        assertEq(account.owner(), accountOwner);
+    }
+}

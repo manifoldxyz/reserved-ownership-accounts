@@ -6,6 +6,7 @@ pragma solidity ^0.8.13;
 import {Create2} from "openzeppelin/utils/Create2.sol";
 import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 import {IERC1271} from "openzeppelin/interfaces/IERC1271.sol";
 import {SignatureChecker} from "openzeppelin/utils/cryptography/SignatureChecker.sol";
 
@@ -14,7 +15,7 @@ import {IAccountRegistry} from "./interfaces/IAccountRegistry.sol";
 import {IAccount} from "./interfaces/IAccount.sol";
 import {ERC1167ProxyBytecode} from "./lib/ERC1167ProxyBytecode.sol";
 
-contract AccountRegistry is Ownable, IAccountRegistry {
+contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
     using Address for address;
     using ECDSA for bytes32;
 
@@ -22,6 +23,12 @@ contract AccountRegistry is Ownable, IAccountRegistry {
     error Unauthorized();
 
     Signer private signer;
+
+    constructor() Ownable() initializer {}
+
+    function initialize(address owner) external initializer {
+        _transferOwnership(owner);
+    }
 
     function createAccount(
         address implementation,
