@@ -8,6 +8,11 @@ interface IAccountRegistry {
         bytes signature;
     }
 
+    struct Signer {
+        address account;
+        bool isContract;
+    }
+
     event AccountCreated(address account, address implementation, bytes32 salt);
 
     function createAccount(

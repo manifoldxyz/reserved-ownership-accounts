@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IAccountRegistry} from "../../src/interfaces/IAccountRegistry.sol";
 import {AccountRegistry} from "../../src/AccountRegistry.sol";
 import {MockAccount} from "../mocks/MockAccount.sol";
+import {MockSigner} from "../mocks/MockSigner.sol";
 import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 
 contract AccountRegistryTest is Test {
@@ -200,6 +201,159 @@ contract AccountRegistryTest is Test {
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", false)
+        );
+    }
+
+    function testCreateAccount_ContractSigner() public {
+        uint256 signerOwnerPrivateKey = 0x2;
+        vm.prank(vm.addr(signerOwnerPrivateKey));
+        MockSigner mockSigner = new MockSigner();
+        mockSigner.mockIsValid(true);
+        registry.setSigner(address(mockSigner));
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerOwnerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+
+        registry.createAccount(
+            address(implementation),
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_ContractSigner_RevertWhen_InvalidSignature() public {
+        uint256 signerOwnerPrivateKey = 0x2;
+        vm.prank(vm.addr(signerOwnerPrivateKey));
+        MockSigner mockSigner = new MockSigner();
+        registry.setSigner(address(mockSigner));
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerOwnerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
+        uint256 signerOwnerPrivateKey = 0x2;
+        vm.prank(vm.addr(signerOwnerPrivateKey));
+        MockSigner mockSigner = new MockSigner();
+        mockSigner.mockIsValid(true);
+        registry.setSigner(address(mockSigner));
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", vm.addr(2), salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerOwnerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
+        uint256 signerOwnerPrivateKey = 0x2;
+        vm.prank(vm.addr(signerOwnerPrivateKey));
+        MockSigner mockSigner = new MockSigner();
+        mockSigner.mockIsValid(true);
+        registry.setSigner(address(mockSigner));
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, "2", expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerOwnerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
+        uint256 signerOwnerPrivateKey = 0x2;
+        vm.prank(vm.addr(signerOwnerPrivateKey));
+        MockSigner mockSigner = new MockSigner();
+        mockSigner.mockIsValid(true);
+        registry.setSigner(address(mockSigner));
+
+        bytes32 salt = "1";
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked(
+                "\x19Ethereum Signed Message:\n84",
+                accountOwner,
+                salt,
+                block.timestamp
+            )
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerOwnerPrivateKey, message);
+        IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
+            expiration: expiration,
+            message: message,
+            signature: abi.encodePacked(r, s, v)
+        });
+
+        vm.prank(accountOwner);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
+
+        registry.createAccount(
+            address(implementation),
+            salt,
+            auth,
+            abi.encodeWithSignature("initialize(bool)", true)
         );
     }
 

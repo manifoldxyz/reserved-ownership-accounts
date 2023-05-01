@@ -98,10 +98,7 @@ contract ERC1967AccountImplementation is
 
     receive() external payable {}
 
-    function isValidSignature(
-        bytes32 hash,
-        bytes memory signature
-    ) external view returns (bytes4 magicValue) {
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         bool isValid = SignatureChecker.isValidSignatureNow(owner, hash, signature);
         if (isValid) {
             return IERC1271.isValidSignature.selector;

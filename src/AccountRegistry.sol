@@ -6,6 +6,8 @@ pragma solidity ^0.8.13;
 import {Create2} from "openzeppelin/utils/Create2.sol";
 import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {IERC1271} from "openzeppelin/interfaces/IERC1271.sol";
+import {SignatureChecker} from "openzeppelin/utils/cryptography/SignatureChecker.sol";
 
 import {IAccountRegistry} from "./interfaces/IAccountRegistry.sol";
 import {IAccount} from "./interfaces/IAccount.sol";
@@ -17,7 +19,7 @@ contract AccountRegistry is Ownable, IAccountRegistry {
     error InitializationFailed();
     error Unauthorized();
 
-    address private signer;
+    Signer private signer;
 
     function createAccount(
         address implementation,
@@ -51,18 +53,31 @@ contract AccountRegistry is Ownable, IAccountRegistry {
     }
 
     function setSigner(address newSigner) external onlyOwner {
-        signer = newSigner;
+        uint32 signerSize;
+        assembly {
+            signerSize := extcodesize(newSigner)
+        }
+        signer.account = newSigner;
+        signer.isContract = signerSize > 0;
     }
 
     function _verify(bytes32 salt, AuthorizationParams calldata auth) internal view {
+        address signatureAccount;
+
+        if (signer.isContract) {
+            if (!SignatureChecker.isValidSignatureNow(signer.account, auth.message, auth.signature))
+                revert Unauthorized();
+        } else {
+            signatureAccount = auth.message.recover(auth.signature);
+        }
+
         bytes32 expectedMessage = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender, salt, auth.expiration)
         );
-        address messageSigner = auth.message.recover(auth.signature);
 
         if (
             auth.message != expectedMessage ||
-            messageSigner != signer ||
+            (!signer.isContract && signatureAccount != signer.account) ||
             auth.expiration < block.timestamp
         ) revert Unauthorized();
     }
