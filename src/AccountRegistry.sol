@@ -9,11 +9,13 @@ import {Ownable} from "openzeppelin/access/Ownable.sol";
 import {IERC1271} from "openzeppelin/interfaces/IERC1271.sol";
 import {SignatureChecker} from "openzeppelin/utils/cryptography/SignatureChecker.sol";
 
+import {Address} from "./lib/Address.sol";
 import {IAccountRegistry} from "./interfaces/IAccountRegistry.sol";
 import {IAccount} from "./interfaces/IAccount.sol";
-import {AccountBytecode} from "./lib/AccountBytecode.sol";
+import {ERC1167ProxyBytecode} from "./lib/ERC1167ProxyBytecode.sol";
 
 contract AccountRegistry is Ownable, IAccountRegistry {
+    using Address for address;
     using ECDSA for bytes32;
 
     error InitializationFailed();
@@ -29,13 +31,13 @@ contract AccountRegistry is Ownable, IAccountRegistry {
     ) external returns (address) {
         _verify(salt, auth);
 
-        bytes memory code = AccountBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
 
         address _account = Create2.computeAddress(salt, keccak256(code));
 
-        if (_account.code.length != 0) return _account;
+        if (_account.isDeployed()) return _account;
 
-        _account = Create2.deploy(0, bytes32(salt), code);
+        _account = Create2.deploy(0, salt, code);
 
         if (initData.length != 0) {
             (bool success, ) = _account.call(initData);
@@ -48,7 +50,7 @@ contract AccountRegistry is Ownable, IAccountRegistry {
     }
 
     function account(address implementation, bytes32 salt) external view returns (address) {
-        bytes memory code = AccountBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         return Create2.computeAddress(salt, keccak256(code));
     }
 

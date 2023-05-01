@@ -29,7 +29,7 @@ contract AccountRegistryTest is Test {
 
         address account = registry.account(address(implementation), salt);
 
-        assertNotEq(address(account), address(0));
+        assertNotEq(account, address(0));
     }
 
     function testCreateAccount() public {
@@ -382,6 +382,6 @@ contract AccountRegistryTest is Test {
             abi.encodeWithSignature("initialize(bool)", true)
         );
 
-        assertEq(address(created), address(account));
+        assertEq(created, account);
     }
 }

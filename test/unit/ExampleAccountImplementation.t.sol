@@ -4,18 +4,18 @@ pragma solidity ^0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {ERC1967AccountImplementation} from "../../src/examples/upgradeable/ERC1967AccountImplementation.sol";
 
-contract AccountTest is Test {
-    ERC1967AccountImplementation internal account;
+contract ExampleAccountImplementationTest is Test {
+    ERC1967AccountImplementation internal implementation;
     address internal accountOwner;
 
     function setUp() public {
         accountOwner = vm.addr(1);
-        account = new ERC1967AccountImplementation();
-        account.initialize(accountOwner);
+        implementation = new ERC1967AccountImplementation();
+        implementation.initialize(accountOwner);
     }
 
     function testOwner() public {
-        assertEq(account.owner(), accountOwner);
+        assertEq(implementation.owner(), accountOwner);
     }
 
     function testSetOwner() public {
@@ -23,9 +23,9 @@ contract AccountTest is Test {
 
         vm.prank(accountOwner);
 
-        account.setOwner(newOwner);
+        implementation.setOwner(newOwner);
 
-        assertEq(account.owner(), newOwner);
+        assertEq(implementation.owner(), newOwner);
     }
 
     function testSetOwner_RevertWhen_SenderNotOwner() public {
@@ -34,31 +34,31 @@ contract AccountTest is Test {
         vm.prank(newOwner);
         vm.expectRevert("Caller is not owner");
 
-        account.setOwner(newOwner);
+        implementation.setOwner(newOwner);
     }
 
     function testInitialize_RevertWhen_AlreadyInitialized() public {
         vm.prank(accountOwner);
         vm.expectRevert("Already initialized");
 
-        account.initialize(accountOwner);
+        implementation.initialize(accountOwner);
     }
 
     function testExecuteCall() public {
-        vm.deal(address(account), 1 ether);
+        vm.deal(address(implementation), 1 ether);
         vm.prank(accountOwner);
 
-        account.executeCall(payable(accountOwner), 0.5 ether, "");
+        implementation.executeCall(payable(accountOwner), 0.5 ether, "");
 
-        assertEq(address(account).balance, 0.5 ether);
+        assertEq(address(implementation).balance, 0.5 ether);
         assertEq(accountOwner.balance, 0.5 ether);
     }
 
     function testExecuteCall_RevertWhen_SenderNotOwner() public {
-        vm.deal(address(account), 1 ether);
+        vm.deal(address(implementation), 1 ether);
         vm.prank(vm.addr(2));
         vm.expectRevert("Caller is not owner");
 
-        account.executeCall(payable(accountOwner), 0.5 ether, "");
+        implementation.executeCall(payable(accountOwner), 0.5 ether, "");
     }
 }
