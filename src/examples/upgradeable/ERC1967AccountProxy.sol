@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 
 import {StorageSlot} from "openzeppelin/utils/StorageSlot.sol";
 
-contract AccountProxy {
+contract ERC1967AccountProxy {
     /**
      * @dev Storage slot with the address of the current implementation.
      * This is the keccak-256 hash of "eip1967.proxy.implementation" subtracted by 1, and is

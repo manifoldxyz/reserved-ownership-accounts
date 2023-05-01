@@ -5,14 +5,14 @@ import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {IAccountRegistry} from "../../src/interfaces/IAccountRegistry.sol";
 import {AccountRegistry} from "../../src/AccountRegistry.sol";
-import {AccountProxy} from "../../src/AccountProxy.sol";
-import {AccountUpgradeable} from "../../src/AccountUpgradeable.sol";
+import {ERC1967AccountProxy} from "../../src/examples/upgradeable/ERC1967AccountProxy.sol";
+import {ERC1967AccountImplementation} from "../../src/examples/upgradeable/ERC1967AccountImplementation.sol";
 import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 
 contract AccountRegistryTest is Test {
     AccountRegistry internal registry;
-    AccountUpgradeable internal implementation;
-    AccountProxy internal implProxy;
+    ERC1967AccountImplementation internal implementation;
+    ERC1967AccountProxy internal proxy;
     address internal signer;
     uint256 internal signerPrivateKey;
     address internal accountOwner;
@@ -23,12 +23,11 @@ contract AccountRegistryTest is Test {
         accountOwner = vm.addr(1);
         registry = new AccountRegistry();
         registry.setSigner(signer);
-        implementation = new AccountUpgradeable();
-        implProxy = new AccountProxy();
+        implementation = new ERC1967AccountImplementation();
+        proxy = new ERC1967AccountProxy();
     }
 
     function testCreateAccount() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -43,11 +42,10 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        AccountUpgradeable account = AccountUpgradeable(
+        ERC1967AccountImplementation account = ERC1967AccountImplementation(
             payable(
                 registry.createAccount(
-                    address(implProxy),
-                    chainId,
+                    address(proxy),
                     salt,
                     auth,
                     abi.encodeWithSignature(

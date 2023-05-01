@@ -21,14 +21,13 @@ contract AccountRegistry is Ownable, IAccountRegistry {
 
     function createAccount(
         address implementation,
-        uint256 chainId,
         bytes32 salt,
         AuthorizationParams calldata auth,
         bytes calldata initData
     ) external returns (address) {
         _verify(salt, auth);
 
-        bytes memory code = AccountBytecode.createCode(implementation, chainId);
+        bytes memory code = AccountBytecode.createCode(implementation);
 
         address _account = Create2.computeAddress(salt, keccak256(code));
 
@@ -41,17 +40,13 @@ contract AccountRegistry is Ownable, IAccountRegistry {
             if (!success) revert InitializationFailed();
         }
 
-        emit AccountCreated(_account, implementation, chainId, salt);
+        emit AccountCreated(_account, implementation, salt);
 
         return _account;
     }
 
-    function account(
-        address implementation,
-        uint256 chainId,
-        bytes32 salt
-    ) external view returns (address) {
-        bytes memory code = AccountBytecode.createCode(implementation, chainId);
+    function account(address implementation, bytes32 salt) external view returns (address) {
+        bytes memory code = AccountBytecode.createCode(implementation);
         return Create2.computeAddress(salt, keccak256(code));
     }
 

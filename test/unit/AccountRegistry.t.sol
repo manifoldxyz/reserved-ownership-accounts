@@ -24,16 +24,14 @@ contract AccountRegistryTest is Test {
     }
 
     function testAccount() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
 
-        address account = registry.account(address(implementation), chainId, salt);
+        address account = registry.account(address(implementation), salt);
 
         assertNotEq(address(account), address(0));
     }
 
     function testCreateAccount() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -50,7 +48,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
@@ -58,7 +55,6 @@ contract AccountRegistryTest is Test {
     }
 
     function testCreateAccount_RevertWhen_DifferentSigner() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -76,7 +72,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
@@ -84,7 +79,6 @@ contract AccountRegistryTest is Test {
     }
 
     function testCreateAccount_RevertWhen_PastExpiration() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp - 1;
         bytes32 message = keccak256(
@@ -102,15 +96,13 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
         );
     }
-    
+
     function testCreateAccount_RevertWhen_DifferentMessageAccount() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -128,7 +120,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
@@ -136,7 +127,6 @@ contract AccountRegistryTest is Test {
     }
 
     function testCreateAccount_RevertWhen_DifferentMessageSalt() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -154,7 +144,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
@@ -162,11 +151,15 @@ contract AccountRegistryTest is Test {
     }
 
     function testCreateAccount_RevertWhen_DifferentMessageExpiration() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, block.timestamp)
+            abi.encodePacked(
+                "\x19Ethereum Signed Message:\n84",
+                accountOwner,
+                salt,
+                block.timestamp
+            )
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
         IAccountRegistry.AuthorizationParams memory auth = IAccountRegistry.AuthorizationParams({
@@ -180,7 +173,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)
@@ -188,7 +180,6 @@ contract AccountRegistryTest is Test {
     }
 
     function testCreateAccount_RevertWhen_InitializationFails() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -206,7 +197,6 @@ contract AccountRegistryTest is Test {
 
         registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", false)
@@ -214,10 +204,9 @@ contract AccountRegistryTest is Test {
     }
 
     function test_AddressesMatch() public {
-        uint256 chainId = 1;
         bytes32 salt = "1";
 
-        address account = registry.account(address(implementation), chainId, salt);
+        address account = registry.account(address(implementation), salt);
 
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -234,7 +223,6 @@ contract AccountRegistryTest is Test {
 
         address created = registry.createAccount(
             address(implementation),
-            chainId,
             salt,
             auth,
             abi.encodeWithSignature("initialize(bool)", true)

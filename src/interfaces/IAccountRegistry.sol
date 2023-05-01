@@ -8,21 +8,16 @@ interface IAccountRegistry {
         bytes signature;
     }
 
-    event AccountCreated(address account, address implementation, uint256 chainId, bytes32 salt);
+    event AccountCreated(address account, address implementation, bytes32 salt);
 
     function createAccount(
         address implementation,
-        uint256 chainId,
         bytes32 salt,
         AuthorizationParams calldata auth,
         bytes calldata initData
     ) external returns (address);
 
-    function account(
-        address implementation,
-        uint256 chainId,
-        bytes32 salt
-    ) external view returns (address);
+    function account(address implementation, bytes32 salt) external view returns (address);
 
     function setSigner(address newSigner) external;
 }

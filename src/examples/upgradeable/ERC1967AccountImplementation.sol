@@ -12,13 +12,19 @@ import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-import {IAccount} from "./interfaces/IAccount.sol";
+import {IAccount} from "../../interfaces/IAccount.sol";
 
 /**
- * @title AccountUpgradeable
- * @notice A lightweight smart contract wallet implementation
+ * @title ERC1967AccountImplementation
+ * @notice A lightweight, upgradeable smart contract wallet implementation
  */
-contract AccountUpgradeable is IERC165, IERC721Receiver, IERC1155Receiver, IAccount, IERC1271 {
+contract ERC1967AccountImplementation is
+    IERC165,
+    IERC721Receiver,
+    IERC1155Receiver,
+    IAccount,
+    IERC1271
+{
     address public owner;
 
     modifier onlyOwner() {

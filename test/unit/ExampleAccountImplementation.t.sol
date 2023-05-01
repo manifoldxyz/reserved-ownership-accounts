@@ -2,15 +2,15 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {AccountUpgradeable} from "../../src/AccountUpgradeable.sol";
+import {ERC1967AccountImplementation} from "../../src/examples/upgradeable/ERC1967AccountImplementation.sol";
 
 contract AccountTest is Test {
-    AccountUpgradeable internal account;
+    ERC1967AccountImplementation internal account;
     address internal accountOwner;
 
     function setUp() public {
         accountOwner = vm.addr(1);
-        account = new AccountUpgradeable();
+        account = new ERC1967AccountImplementation();
         account.initialize(accountOwner);
     }
 
