@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {IAccountRegistry} from "../../src/interfaces/IAccountRegistry.sol";
 import {AccountRegistry} from "../../src/AccountRegistry.sol";
@@ -21,10 +20,10 @@ contract AccountRegistryTest is Test {
         signerPrivateKey = 0x1337;
         signer = vm.addr(signerPrivateKey);
         accountOwner = vm.addr(1);
-        registry = new AccountRegistry();
-        registry.setSigner(signer);
         implementation = new ERC1967AccountImplementation();
         proxy = new ERC1967AccountProxy();
+        registry = new AccountRegistry(address(proxy));
+        registry.setSigner(signer);
     }
 
     function testCreateAccount() public {
@@ -45,7 +44,6 @@ contract AccountRegistryTest is Test {
         ERC1967AccountImplementation account = ERC1967AccountImplementation(
             payable(
                 registry.createAccount(
-                    address(proxy),
                     salt,
                     auth,
                     abi.encodeWithSignature(

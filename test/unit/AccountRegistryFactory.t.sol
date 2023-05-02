@@ -7,19 +7,22 @@ import {AccountRegistry} from "../../src/AccountRegistry.sol";
 
 contract AccountRegistryFactoryTest is Test {
     AccountRegistryFactory internal factory;
-    AccountRegistry internal implementation;
+    AccountRegistry internal registryImplementation;
     address internal deployer;
 
     function setUp() public {
-        deployer = vm.addr(0x1337);
+        deployer = vm.addr(1);
         factory = new AccountRegistryFactory();
-        implementation = new AccountRegistry();
+        vm.prank(0xb58164C376eb9D920E83162E8dcD3dE122bA8a34);
+        registryImplementation = new AccountRegistry{
+            salt: 0x7331733173317331733173317331733173317331733173317331733173317331
+        }(address(0));
     }
 
     function testRegistry() public {
         uint256 index = 1;
 
-        address registry = factory.registry(address(implementation), deployer, index);
+        address registry = factory.registry(deployer, index);
 
         assertNotEq(registry, address(0));
     }
@@ -27,7 +30,7 @@ contract AccountRegistryFactoryTest is Test {
     function testCreateRegistry() public {
         uint256 index = 1;
 
-        address registry = factory.createRegistry(address(implementation), index);
+        address registry = factory.createRegistry(deployer, index);
 
         assertNotEq(registry, address(0));
     }
@@ -35,11 +38,11 @@ contract AccountRegistryFactoryTest is Test {
     function test_AddressesMatch() public {
         uint256 index = 1;
 
-        address registry = factory.registry(address(implementation), deployer, index);
+        address registry = factory.registry(deployer, index);
 
         vm.prank(deployer);
 
-        address created = factory.createRegistry(address(implementation), index);
+        address created = factory.createRegistry(address(registryImplementation), index);
 
         assertEq(created, registry);
     }
@@ -47,8 +50,8 @@ contract AccountRegistryFactoryTest is Test {
     function test_DifferentAddresses_DifferentDeployers() public {
         uint256 index = 1;
 
-        address registry1 = factory.registry(address(implementation), deployer, index);
-        address registry2 = factory.registry(address(implementation), vm.addr(2), index);
+        address registry1 = factory.registry(deployer, index);
+        address registry2 = factory.registry(vm.addr(2), index);
 
         assertNotEq(registry1, registry2);
     }
@@ -56,8 +59,8 @@ contract AccountRegistryFactoryTest is Test {
     function test_DifferentAddresses_DifferentIndexes() public {
         uint256 index = 1;
 
-        address registry1 = factory.registry(address(implementation), deployer, index);
-        address registry2 = factory.registry(address(implementation), deployer, index + 1);
+        address registry1 = factory.registry(deployer, index);
+        address registry2 = factory.registry(deployer, index + 1);
 
         assertNotEq(registry1, registry2);
     }

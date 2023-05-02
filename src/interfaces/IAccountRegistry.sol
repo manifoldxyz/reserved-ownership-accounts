@@ -16,13 +16,12 @@ interface IAccountRegistry {
     event AccountCreated(address account, address implementation, bytes32 salt);
 
     function createAccount(
-        address implementation,
         bytes32 salt,
         AuthorizationParams calldata auth,
         bytes calldata initData
     ) external returns (address);
 
-    function account(address implementation, bytes32 salt) external view returns (address);
+    function account(bytes32 salt) external view returns (address);
 
     function setSigner(address newSigner) external;
 }

@@ -22,24 +22,25 @@ contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
     error InitializationFailed();
     error Unauthorized();
 
+    address public implementation;
     Signer private signer;
 
-    constructor() Ownable() initializer {}
+    constructor(address implementation_) Ownable() initializer {
+        implementation = implementation_;
+    }
 
-    function initialize(address owner) external initializer {
+    function initialize(address implementation_, address owner) external initializer {
+        implementation = implementation_;
         _transferOwnership(owner);
     }
 
     function createAccount(
-        address implementation,
         bytes32 salt,
         AuthorizationParams calldata auth,
         bytes calldata initData
     ) external returns (address) {
         _verify(salt, auth);
-
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
-
         address _account = Create2.computeAddress(salt, keccak256(code));
 
         if (_account.isDeployed()) return _account;
@@ -56,7 +57,7 @@ contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
         return _account;
     }
 
-    function account(address implementation, bytes32 salt) external view returns (address) {
+    function account(bytes32 salt) external view returns (address) {
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         return Create2.computeAddress(salt, keccak256(code));
     }

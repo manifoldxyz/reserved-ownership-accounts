@@ -3,16 +3,16 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 
-import {AccountRegistryFactory} from "../src/AccountRegistryFactory.sol";
+import {AccountRegistry} from "../src/AccountRegistry.sol";
 
-contract DeployRegistryFactory is Script {
+contract DeployRegistry is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        new AccountRegistryFactory{
-            salt: 0x1337133713371337133713371337133713371337133713371337133713371337
-        }();
+        new AccountRegistry{
+            salt: 0x7331733173317331733173317331733173317331733173317331733173317331
+        }(address(0));
 
         vm.stopBroadcast();
     }

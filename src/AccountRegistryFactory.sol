@@ -14,10 +14,15 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     error InitializationFailed();
 
-    function createRegistry(address implementation, uint256 index) external returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation, msg.sender, index);
-        bytes32 salt = bytes32(index);
+    address private immutable registryImplementation = 0x5bB5507be35BA3109E8556bF47321aF3D1f144cf;
 
+    function createRegistry(address implementation, uint256 index) external returns (address) {
+        bytes32 salt = bytes32(index);
+        bytes memory code = ERC1167ProxyBytecode.createCode(
+            registryImplementation,
+            msg.sender,
+            index
+        );
         address _registry = Create2.computeAddress(salt, keccak256(code));
 
         if (_registry.isDeployed()) return _registry;
@@ -25,7 +30,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         _registry = Create2.deploy(0, salt, code);
 
         (bool success, ) = _registry.call(
-            abi.encodeWithSignature("initialize(address)", msg.sender)
+            abi.encodeWithSignature("initialize(address,address)", implementation, msg.sender)
         );
         if (!success) revert InitializationFailed();
 
@@ -34,12 +39,12 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         return _registry;
     }
 
-    function registry(
-        address implementation,
-        address deployer,
-        uint256 index
-    ) external view override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation, deployer, index);
+    function registry(address deployer, uint256 index) external view override returns (address) {
+        bytes memory code = ERC1167ProxyBytecode.createCode(
+            registryImplementation,
+            deployer,
+            index
+        );
         return Create2.computeAddress(bytes32(index), keccak256(code));
     }
 }

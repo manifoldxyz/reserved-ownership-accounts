@@ -6,3 +6,6 @@ out
 
 # Node
 node_modules
+
+# Dotenv file
+.env
