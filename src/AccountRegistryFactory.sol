@@ -14,15 +14,11 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     error InitializationFailed();
 
-    address private immutable registryImplementation = 0x5bB5507be35BA3109E8556bF47321aF3D1f144cf;
+    address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
 
-    function createRegistry(address implementation, uint256 index) external returns (address) {
-        bytes32 salt = bytes32(index);
-        bytes memory code = ERC1167ProxyBytecode.createCode(
-            registryImplementation,
-            msg.sender,
-            index
-        );
+    function createRegistry(address implementation, uint96 index) external returns (address) {
+        bytes32 salt = _getSalt(msg.sender, index);
+        bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
         address _registry = Create2.computeAddress(salt, keccak256(code));
 
         if (_registry.isDeployed()) return _registry;
@@ -39,12 +35,13 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         return _registry;
     }
 
-    function registry(address deployer, uint256 index) external view override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(
-            registryImplementation,
-            deployer,
-            index
-        );
-        return Create2.computeAddress(bytes32(index), keccak256(code));
+    function registry(address deployer, uint96 index) external view override returns (address) {
+        bytes32 salt = _getSalt(deployer, index);
+        bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
+        return Create2.computeAddress(salt, keccak256(code));
+    }
+
+    function _getSalt(address deployer, uint96 index) private pure returns (bytes32) {
+        return bytes32(abi.encodePacked(deployer, index));
     }
 }

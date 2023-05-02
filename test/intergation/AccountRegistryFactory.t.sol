@@ -34,7 +34,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function testCreateRegistryAndAccount() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         vm.startPrank(deployer);
         AccountRegistry newRegistry = AccountRegistry(

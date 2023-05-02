@@ -20,7 +20,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function testRegistry() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         address registry = factory.registry(deployer, index);
 
@@ -28,7 +28,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function testCreateRegistry() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         address registry = factory.createRegistry(deployer, index);
 
@@ -36,7 +36,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function test_AddressesMatch() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         address registry = factory.registry(deployer, index);
 
@@ -48,7 +48,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function test_DifferentAddresses_DifferentDeployers() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         address registry1 = factory.registry(deployer, index);
         address registry2 = factory.registry(vm.addr(2), index);
@@ -57,7 +57,7 @@ contract AccountRegistryFactoryTest is Test {
     }
 
     function test_DifferentAddresses_DifferentIndexes() public {
-        uint256 index = 1;
+        uint96 index = 1;
 
         address registry1 = factory.registry(deployer, index);
         address registry2 = factory.registry(deployer, index + 1);
