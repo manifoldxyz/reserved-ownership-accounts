@@ -13,10 +13,6 @@ contract AccountRegistryFactoryTest is Test {
     function setUp() public {
         deployer = vm.addr(1);
         factory = new AccountRegistryFactory();
-        vm.prank(0xb58164C376eb9D920E83162E8dcD3dE122bA8a34);
-        registryImplementation = new AccountRegistry{
-            salt: 0x7331733173317331733173317331733173317331733173317331733173317331
-        }(address(0));
     }
 
     function testRegistry() public {
@@ -42,7 +38,7 @@ contract AccountRegistryFactoryTest is Test {
 
         vm.prank(deployer);
 
-        address created = factory.createRegistry(address(registryImplementation), index);
+        address created = factory.createRegistry(vm.addr(2), index);
 
         assertEq(created, registry);
     }
