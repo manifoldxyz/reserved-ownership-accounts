@@ -3,11 +3,9 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {AccountRegistryFactory} from "../../../../src/examples/factory/AccountRegistryFactory.sol";
-import {AccountRegistryImplementation} from "../../../../src/examples/registry/AccountRegistryImplementation.sol";
 
 contract AccountRegistryFactoryTest is Test {
     AccountRegistryFactory internal factory;
-    AccountRegistryImplementation internal registryImplementation;
     address internal deployer;
 
     function setUp() public {

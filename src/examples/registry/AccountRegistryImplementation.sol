@@ -29,8 +29,8 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     address public implementation;
     Signer private signer;
 
-    constructor(address implementation_) Ownable() initializer {
-        implementation = implementation_;
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize(address implementation_, address owner) external initializer {

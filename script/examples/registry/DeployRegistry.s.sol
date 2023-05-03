@@ -12,7 +12,7 @@ contract DeployRegistry is Script {
 
         new AccountRegistryImplementation{
             salt: 0x7331733173317331733173317331733173317331733173317331733173317331
-        }(address(0));
+        }();
 
         vm.stopBroadcast();
     }

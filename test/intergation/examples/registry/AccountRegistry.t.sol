@@ -2,11 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {IAccountRegistry} from "../../../../src/interfaces/IAccountRegistry.sol";
 import {AccountRegistryImplementation} from "../../../../src/examples/registry/AccountRegistryImplementation.sol";
 import {ERC1967AccountProxy} from "../../../../src/examples/account/ERC1967AccountProxy.sol";
 import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC1967AccountImplementation.sol";
-import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
+import {Clones} from "openzeppelin/proxy/Clones.sol";
 
 contract AccountRegistryTest is Test {
     AccountRegistryImplementation internal registry;
@@ -22,7 +21,10 @@ contract AccountRegistryTest is Test {
         accountOwner = vm.addr(1);
         implementation = new ERC1967AccountImplementation();
         proxy = new ERC1967AccountProxy();
-        registry = new AccountRegistryImplementation(address(proxy));
+        registry = AccountRegistryImplementation(
+            Clones.clone(address(new AccountRegistryImplementation()))
+        );
+        registry.initialize(address(proxy), address(this));
         registry.setSigner(signer);
     }
 

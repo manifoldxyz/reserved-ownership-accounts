@@ -11,6 +11,7 @@ import {ERC165Checker} from "openzeppelin/utils/introspection/ERC165Checker.sol"
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 
 import {IERC1967Account} from "./IERC1967Account.sol";
 
@@ -23,17 +24,21 @@ contract ERC1967AccountImplementation is
     IERC721Receiver,
     IERC1155Receiver,
     IERC1967Account,
-    IERC1271
+    IERC1271,
+    Initializable
 {
     address public owner;
+
+    constructor() {
+        _disableInitializers();
+    }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not owner");
         _;
     }
 
-    function initialize(address owner_) external {
-        require(owner == address(0), "Already initialized");
+    function initialize(address owner_) external initializer {
         owner = owner_;
     }
 

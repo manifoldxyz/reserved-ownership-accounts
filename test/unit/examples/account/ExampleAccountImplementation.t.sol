@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC1967AccountImplementation.sol";
+import {Clones} from "openzeppelin/proxy/Clones.sol";
 
 contract ExampleAccountImplementationTest is Test {
     ERC1967AccountImplementation internal implementation;
@@ -10,7 +11,9 @@ contract ExampleAccountImplementationTest is Test {
 
     function setUp() public {
         accountOwner = vm.addr(1);
-        implementation = new ERC1967AccountImplementation();
+        implementation = ERC1967AccountImplementation(
+            payable(Clones.clone(address(new ERC1967AccountImplementation())))
+        );
         implementation.initialize(accountOwner);
     }
 
@@ -39,7 +42,7 @@ contract ExampleAccountImplementationTest is Test {
 
     function testInitialize_RevertWhen_AlreadyInitialized() public {
         vm.prank(accountOwner);
-        vm.expectRevert("Already initialized");
+        vm.expectRevert("Initializable: contract is already initialized");
 
         implementation.initialize(accountOwner);
     }

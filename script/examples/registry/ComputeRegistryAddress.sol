@@ -12,7 +12,7 @@ contract ComputeRegistryAddress is Script {
 
         AccountRegistryImplementation registry = new AccountRegistryImplementation{
             salt: 0x7331733173317331733173317331733173317331733173317331733173317331
-        }(address(0));
+        }();
 
         console.log("Registry address: %s", address(registry));
     }

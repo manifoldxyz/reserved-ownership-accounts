@@ -2,12 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {IAccountRegistry} from "../../../../src/interfaces/IAccountRegistry.sol";
 import {AccountRegistryImplementation} from "../../../../src/examples/registry/AccountRegistryImplementation.sol";
 import {AccountRegistryFactory} from "../../../../src/examples/factory/AccountRegistryFactory.sol";
 import {ERC1967AccountProxy} from "../../../../src/examples/account/ERC1967AccountProxy.sol";
 import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC1967AccountImplementation.sol";
-import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
 
 contract AccountRegistryFactoryTest is Test {
     AccountRegistryImplementation internal registry;
@@ -27,7 +25,7 @@ contract AccountRegistryFactoryTest is Test {
         factory = new AccountRegistryFactory();
         implementation = new ERC1967AccountImplementation();
         proxy = new ERC1967AccountProxy();
-        registry = new AccountRegistryImplementation(address(0));
+        registry = new AccountRegistryImplementation();
         vm.etch(0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94, address(registry).code);
     }
 
