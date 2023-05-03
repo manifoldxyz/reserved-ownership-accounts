@@ -5,9 +5,9 @@ author: Paul Sullivan (@sullivph) <paul.sullivan@manifold.xyz>, Wilkins Chung (@
 discussions-to: <URL>
 status: Draft
 type: Standards Track
-category:  ERC
+category: ERC
 created: 2023-04-25
-requires: [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) , [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
+requires: [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167), [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
 ---
 
 ## Abstract
@@ -16,7 +16,7 @@ The following specifies a system for services to provide their users with a dete
 
 ## Motivation
 
-It is common for web services to allow their users to hold on-chain assets via custodial wallets. These wallets are typically EOAs, deployed smart contract wallets or omnibus contracts, with private keys or asset ownership information stored on a traditional database. This proposal outlines a solution that avoids the security concerns associated with historical approaches, and rids the need and implications of services custoding user assets
+It is common for web services to allow their users to hold on-chain assets via custodial wallets. These wallets are typically EOAs, deployed smart contract wallets or omnibus contracts, with private keys or asset ownership information stored on a traditional database. This proposal outlines a solution that avoids the security concerns associated with historical approaches, and rids the need and implications of services controlling user assets
 
 Users on external services that choose to leverage the following specification can be given an Ethereum address to receive assets without the need to do any on-chain transaction. These users can choose to attain control of said addresses at a future point in time. Thus, on-chain assets can be sent to and owned by a user beforehand, therefore enabling the formation of an on-chain identity without requiring the user to interact with the underlying blockchain.
 
@@ -28,13 +28,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 The system for creating deferred custody accounts consists of:
 
-1. An Acccount Registry which provides a deterministic smart contract address for an external service based on an identifying salt, and a signature verified function that allows for the deployment and control of Account Instances by the end user
+1. An Account Registry which provides a deterministic smart contract address for an external service based on an identifying salt, and a signature verified function that allows for the deployment and control of Account Instances by the end user
 2. Account Instances created by the Account Registry for the end user which allow access to the assets received at the deterministic address prior to Account Instance deployment.
 
-External services wishing to provide their users with reserved ownership accounts MUST maintain a relationship between a user's identifying credentials and a salt. The external service MUST refer to an Acccount Registry Instance to retrieve the deterministic account address for a given salt. Users from a given service MUST be able to create an Account Instance by validating their identiying credentials via the external service, which will give the user a signature to enable the user to deploy and control over a smart contract at the deterministic address.
+External services wishing to provide their users with reserved ownership accounts MUST maintain a relationship between a user's identifying credentials and a salt. The external service SHALL refer to an Account Registry Instance to retrieve the deterministic account address for a given salt. Users from a given service MUST be able to create an Account Instance by validating their identifying credentials via the external service, which SHOULD give the user a valid signature for their salt. Users SHALL pass this signature to the service's Account Registry Instance in a call to `createAccount` to create an Account Instance at the deterministic address.
 
-### Acccount Registry
-The Acccount Registry MUST implement the following interface:
+### Account Registry
+The Account Registry MUST implement the following interface:
 
 ```solidity
 interface IAccountRegistry {
@@ -80,7 +80,7 @@ interface IAccountRegistry {
 }
 ```
 
-- The Acccount Registry MUST use an immutable account implementation address.
+- The Account Registry MUST use an immutable account implementation address.
 - `createAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt. Verification SHOULD be done by validating the message and signature against the salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
 - `createAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
 - New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership assigned to the msg.sender
@@ -89,7 +89,7 @@ interface IAccountRegistry {
 ### Account Instance
 The Account Instance can be any smart contract wallet implementation.
 
-- All Account Instances MUST be created using a Account Registry Instance.
+- All Account Instances MUST be created using a Account Registry Instance
 - Account Instance SHOULD support [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
 - Account Instance SHOULD provide access to assets previously sent to the address at which the Account Instance is deployed to
 
@@ -111,13 +111,13 @@ Since Account Instances are deployed as [ERC-1167](https://eips.ethereum.org/EIP
 
 This also allows services to gain the the trust of users by deploying their registries with a reference to a trusted account implementation address.
 
-Furthermore, account implementations can be designed as upgradeable, so users are not necessarily bound to the implementation specified by the Accont Registry Instance used to create their account.
+Furthermore, account implementations can be designed as upgradeable, so users are not necessarily bound to the implementation specified by the Account Registry Instance used to create their account.
 
 ## Reference Implementation
 
-The following is an example of an Acccount Registry Factory which can be used by external service providers to deploy their own Acccount Registry Instance.
+The following is an example of an Account Registry Factory which can be used by external service providers to deploy their own Account Registry Instance.
 
-### Acccount Registry Factory
+### Account Registry Factory
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -169,7 +169,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 }
 ```
 
-### Acccount Registry
+### Account Registry
 
 ```solidity
 // SPDX-License-Identifier: MIT
