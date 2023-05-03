@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC1967AccountImplementation} from "../../src/examples/upgradeable/ERC1967AccountImplementation.sol";
+import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC1967AccountImplementation.sol";
 
 contract ExampleAccountImplementationTest is Test {
     ERC1967AccountImplementation internal implementation;

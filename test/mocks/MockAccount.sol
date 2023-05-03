@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import {IERC165} from "openzeppelin/utils/introspection/IERC165.sol";
 
-import {IAccount} from "../../src/interfaces/IAccount.sol";
+import {IERC1967Account} from "../../src/examples/account/IERC1967Account.sol";
 
-contract MockAccount is IERC165, IAccount {
+contract MockAccount is IERC1967Account, IERC165 {
     bool private _initialized;
 
     receive() external payable {}

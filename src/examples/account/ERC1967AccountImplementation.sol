@@ -12,7 +12,7 @@ import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-import {IAccount} from "../../interfaces/IAccount.sol";
+import {IERC1967Account} from "./IERC1967Account.sol";
 
 /**
  * @title ERC1967AccountImplementation
@@ -22,7 +22,7 @@ contract ERC1967AccountImplementation is
     IERC165,
     IERC721Receiver,
     IERC1155Receiver,
-    IAccount,
+    IERC1967Account,
     IERC1271
 {
     address public owner;
@@ -38,7 +38,7 @@ contract ERC1967AccountImplementation is
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return (interfaceId == type(IAccount).interfaceId ||
+        return (interfaceId == type(IERC1967Account).interfaceId ||
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             interfaceId == type(IERC165).interfaceId);
