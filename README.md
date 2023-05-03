@@ -7,7 +7,7 @@ status: Draft
 type: Standards Track
 category: ERC
 created: 2023-04-25
-requires: [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167), [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
+requires: 1167, 1271
 ---
 
 ## Abstract
