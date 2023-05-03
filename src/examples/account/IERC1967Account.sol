@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-interface IAccountProxy {
-    function implementation() external view returns (address);
-}
-
-interface IAccount {
+interface IERC1967Account {
     event TransactionExecuted(address indexed target, uint256 indexed value, bytes data);
 
     receive() external payable;

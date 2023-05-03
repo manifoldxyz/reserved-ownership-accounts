@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 
-import {AccountRegistryFactory} from "../src/AccountRegistryFactory.sol";
+import {AccountRegistryFactory} from "../../../src/examples/factory/AccountRegistryFactory.sol";
 
 contract DeployRegistryFactory is Script {
     function run() external {

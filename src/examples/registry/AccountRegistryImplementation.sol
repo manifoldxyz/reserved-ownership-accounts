@@ -10,14 +10,18 @@ import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 import {IERC1271} from "openzeppelin/interfaces/IERC1271.sol";
 import {SignatureChecker} from "openzeppelin/utils/cryptography/SignatureChecker.sol";
 
-import {Address} from "./lib/Address.sol";
-import {IAccountRegistry} from "./interfaces/IAccountRegistry.sol";
-import {IAccount} from "./interfaces/IAccount.sol";
-import {ERC1167ProxyBytecode} from "./lib/ERC1167ProxyBytecode.sol";
+import {Address} from "../../lib/Address.sol";
+import {IAccountRegistry} from "../../interfaces/IAccountRegistry.sol";
+import {ERC1167ProxyBytecode} from "../../lib/ERC1167ProxyBytecode.sol";
 
-contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
+contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegistry {
     using Address for address;
     using ECDSA for bytes32;
+
+    struct Signer {
+        address account;
+        bool isContract;
+    }
 
     error InitializationFailed();
     error Unauthorized();
@@ -34,18 +38,24 @@ contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
         _transferOwnership(owner);
     }
 
+    /**
+     * @dev See {IAccountRegistry-createAccount}
+     */
     function createAccount(
-        bytes32 salt,
-        AuthorizationParams calldata auth,
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature,
         bytes calldata initData
-    ) external returns (address) {
-        _verify(salt, auth);
+    ) external override returns (address) {
+        _verify(owner, salt, expiration, message, signature);
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
-        address _account = Create2.computeAddress(salt, keccak256(code));
+        address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
         if (_account.isDeployed()) return _account;
 
-        _account = Create2.deploy(0, salt, code);
+        _account = Create2.deploy(0, bytes32(salt), code);
 
         if (initData.length != 0) {
             (bool success, ) = _account.call(initData);
@@ -57,9 +67,12 @@ contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
         return _account;
     }
 
-    function account(bytes32 salt) external view returns (address) {
+    /**
+     * @dev See {IAccountRegistry-account}
+     */
+    function account(uint256 salt) external view override returns (address) {
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
-        return Create2.computeAddress(salt, keccak256(code));
+        return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
     function setSigner(address newSigner) external onlyOwner {
@@ -71,24 +84,30 @@ contract AccountRegistry is Ownable, Initializable, IAccountRegistry {
         signer.isContract = signerSize > 0;
     }
 
-    function _verify(bytes32 salt, AuthorizationParams calldata auth) internal view {
+    function _verify(
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature
+    ) internal view {
         address signatureAccount;
 
         if (signer.isContract) {
-            if (!SignatureChecker.isValidSignatureNow(signer.account, auth.message, auth.signature))
+            if (!SignatureChecker.isValidSignatureNow(signer.account, message, signature))
                 revert Unauthorized();
         } else {
-            signatureAccount = auth.message.recover(auth.signature);
+            signatureAccount = message.recover(signature);
         }
 
         bytes32 expectedMessage = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender, salt, auth.expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", owner, salt, expiration)
         );
 
         if (
-            auth.message != expectedMessage ||
+            message != expectedMessage ||
             (!signer.isContract && signatureAccount != signer.account) ||
-            auth.expiration < block.timestamp
+            (expiration != 0 && expiration < block.timestamp)
         ) revert Unauthorized();
     }
 }

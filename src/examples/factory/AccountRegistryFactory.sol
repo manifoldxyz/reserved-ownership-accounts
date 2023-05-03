@@ -5,9 +5,9 @@ pragma solidity ^0.8.13;
 
 import {Create2} from "openzeppelin/utils/Create2.sol";
 
-import {Address} from "./lib/Address.sol";
-import {IAccountRegistryFactory} from "./interfaces/IAccountRegistryFactory.sol";
-import {ERC1167ProxyBytecode} from "./lib/ERC1167ProxyBytecode.sol";
+import {Address} from "../../lib/Address.sol";
+import {ERC1167ProxyBytecode} from "../../lib/ERC1167ProxyBytecode.sol";
+import {IAccountRegistryFactory} from "./IAccountRegistryFactory.sol";
 
 contract AccountRegistryFactory is IAccountRegistryFactory {
     using Address for address;
