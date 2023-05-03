@@ -52,11 +52,12 @@ interface IAccountRegistry {
      *
      * If account has already been created, returns the account address without calling create2.
      * 
+     * @param owner      - The initial owner of the new Account Instance
      * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
      * @param expiration - If expiration > 0, represents expiration time for the signature.  Otherwise
      *                     signature does not expire.
-     * @param message    - The keccak256 message which validates the ability for the msg.sender to deploy
-     * @param signature  - The signature which validates the ability for the msg.sender to deploy
+     * @param message    - The keccak256 message which validates the owner, salt, expiration
+     * @param signature  - The signature which validates the owner, salt, expiration
      * @param initData   - If initData is not empty and account has not yet been created, calls account with
      *                     provided initData after creation.
      *
@@ -64,6 +65,7 @@ interface IAccountRegistry {
      * @return the address for which the Account Instance was created
      */ 
     function createAccount(
+        address owner,
         uint256 salt,
         uint256 expiration,
         bytes32 message,
@@ -81,15 +83,15 @@ interface IAccountRegistry {
 ```
 
 - The Account Registry MUST use an immutable account implementation address.
-- `createAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt. Verification SHOULD be done by validating the message and signature against the salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
+- `createAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
 - `createAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
-- New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership assigned to the msg.sender
+- New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership SHOULD be assigned to the initial owner
 
 
 ### Account Instance
 The Account Instance can be any smart contract wallet implementation.
 
-- All Account Instances MUST be created using a Account Registry Instance
+- All Account Instances MUST be created using an Account Registry Instance
 - Account Instance SHOULD support [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
 - Account Instance SHOULD provide access to assets previously sent to the address at which the Account Instance is deployed to
 
@@ -107,7 +109,7 @@ We are providing a reference Registry Factory which can deploy Account Registrie
 
 ### Account Registry and Account Implementation Coupling
 
-Since Account Instances are deployed as [ERC-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies, the account implementation address affects the addresses of accounts deployed from a given Account Registry. Requiring that registry instances be linked to a a single, immutable account implementation ensures consistency between a user's salt and linked address on a given Account Registry Instance.
+Since Account Instances are deployed as [ERC-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies, the account implementation address affects the addresses of accounts deployed from a given Account Registry. Requiring that registry instances be linked to a single, immutable account implementation ensures consistency between a user's salt and linked address on a given Account Registry Instance.
 
 This also allows services to gain the the trust of users by deploying their registries with a reference to a trusted account implementation address.
 
@@ -216,13 +218,14 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-createAccount}
      */
     function createAccount(
+        address owner,
         uint256 salt,
         uint256 expiration,
         bytes32 message,
         bytes calldata signature,
         bytes calldata initData
     ) external override returns (address) {
-        _verify(salt, expiration, message, signature);
+        _verify(owner, salt, expiration, message, signature);
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
@@ -257,7 +260,13 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         signer.isContract = signerSize > 0;
     }
 
-    function _verify(uint256 salt, uint256 expiration, bytes32 message, bytes calldata signature) internal view {
+    function _verify(
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature
+    ) internal view {
         address signatureAccount;
 
         if (signer.isContract) {
@@ -268,7 +277,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         }
 
         bytes32 expectedMessage = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender, salt, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", owner, salt, expiration)
         );
 
         if (

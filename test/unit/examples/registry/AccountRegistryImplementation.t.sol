@@ -42,7 +42,34 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
+    }
+
+    function testCreateAccount_DifferentSender() public {
+        uint256 salt = 1;
+        uint256 expiration = block.timestamp + 10000;
+        bytes32 message = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", accountOwner, salt, expiration)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
+
+        vm.prank(vm.addr(2));
+
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_DifferentSigner() public {
@@ -56,7 +83,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_PastExpiration() public {
@@ -72,7 +106,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_DifferentMessageAccount() public {
@@ -86,7 +127,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_DifferentMessageSalt() public {
@@ -100,7 +148,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_DifferentMessageExpiration() public {
@@ -119,7 +174,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_RevertWhen_InitializationFails() public {
@@ -133,7 +195,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InitializationFailed()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", false));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", false)
+        );
     }
 
     function testCreateAccount_ContractSigner() public {
@@ -152,7 +221,14 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_ContractSigner_RevertWhen_InvalidSignature() public {
@@ -171,7 +247,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
@@ -191,7 +274,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
@@ -211,7 +301,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function testCreateAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
@@ -236,7 +333,14 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(salt, expiration, message, abi.encodePacked(r, s, v), abi.encodeWithSignature("initialize(bool)", true));
+        registry.createAccount(
+            accountOwner,
+            salt,
+            expiration,
+            message,
+            abi.encodePacked(r, s, v),
+            abi.encodeWithSignature("initialize(bool)", true)
+        );
     }
 
     function test_AddressesMatch() public {
@@ -253,6 +357,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
 
         address created = registry.createAccount(
+            accountOwner,
             salt,
             expiration,
             message,

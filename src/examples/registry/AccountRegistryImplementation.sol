@@ -42,13 +42,14 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-createAccount}
      */
     function createAccount(
+        address owner,
         uint256 salt,
         uint256 expiration,
         bytes32 message,
         bytes calldata signature,
         bytes calldata initData
     ) external override returns (address) {
-        _verify(salt, expiration, message, signature);
+        _verify(owner, salt, expiration, message, signature);
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
@@ -83,7 +84,13 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         signer.isContract = signerSize > 0;
     }
 
-    function _verify(uint256 salt, uint256 expiration, bytes32 message, bytes calldata signature) internal view {
+    function _verify(
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature
+    ) internal view {
         address signatureAccount;
 
         if (signer.isContract) {
@@ -94,7 +101,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         }
 
         bytes32 expectedMessage = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender, salt, expiration)
+            abi.encodePacked("\x19Ethereum Signed Message:\n84", owner, salt, expiration)
         );
 
         if (

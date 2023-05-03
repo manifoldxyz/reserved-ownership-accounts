@@ -53,6 +53,7 @@ contract AccountRegistryFactoryTest is Test {
         ERC1967AccountImplementation account = ERC1967AccountImplementation(
             payable(
                 newRegistry.createAccount(
+                    accountOwner,
                     salt,
                     expiration,
                     message,
