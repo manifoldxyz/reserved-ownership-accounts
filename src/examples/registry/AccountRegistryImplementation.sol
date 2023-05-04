@@ -41,7 +41,23 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     /**
      * @dev See {IAccountRegistry-createAccount}
      */
-    function createAccount(
+    function createAccount(uint256 salt) external override returns (address) {
+        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
+        address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
+
+        if (_account.isDeployed()) return _account;
+
+        _account = Create2.deploy(0, bytes32(salt), code);
+
+        emit AccountCreated(_account, implementation, salt);
+
+        return _account;
+    }
+
+    /**
+     * @dev See {IAccountRegistry-assignAccount}
+     */
+    function assignAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
@@ -50,19 +66,14 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         bytes calldata initData
     ) external override returns (address) {
         _verify(owner, salt, expiration, message, signature);
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
-        address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
-
-        if (_account.isDeployed()) return _account;
-
-        _account = Create2.deploy(0, bytes32(salt), code);
+        address _account = this.createAccount(salt);
 
         if (initData.length != 0) {
             (bool success, ) = _account.call(initData);
             if (!success) revert InitializationFailed();
         }
 
-        emit AccountCreated(_account, implementation, salt);
+        emit AccountAssigned(_account, owner);
 
         return _account;
     }

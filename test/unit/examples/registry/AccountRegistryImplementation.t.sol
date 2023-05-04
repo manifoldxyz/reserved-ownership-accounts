@@ -44,7 +44,7 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -64,7 +64,7 @@ contract AccountRegistryTest is Test {
 
         vm.prank(vm.addr(2));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -85,7 +85,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -108,7 +108,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -129,7 +129,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -150,7 +150,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -176,7 +176,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -197,7 +197,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InitializationFailed()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -223,7 +223,7 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -249,7 +249,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -276,7 +276,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -303,7 +303,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -335,7 +335,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.createAccount(
+        registry.assignAccount(
             accountOwner,
             salt,
             expiration,
@@ -358,7 +358,7 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        address created = registry.createAccount(
+        address created = registry.assignAccount(
             accountOwner,
             salt,
             expiration,

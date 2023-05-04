@@ -48,10 +48,27 @@ interface IAccountRegistry {
     );
 
     /**
+     * @dev Registry instances emit the AccountAssigned event upon successful account assignment
+     */
+    event AccountAssigned(address account, address owner);
+
+    /**
      * @dev Creates a smart contract account.
      *
      * If account has already been created, returns the account address without calling create2.
-     * 
+     *
+     * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
+     *
+     * Emits AccountCreated event
+     * @return the address for which the Account Instance was created
+     */
+    function createAccount(uint256 salt) external returns (address);
+
+    /**
+     * @dev Assigns a smart contract account to a given owner.
+     *
+     * If the account has not already been created, the account will be created first using `createAccount`
+     *
      * @param owner      - The initial owner of the new Account Instance
      * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
      * @param expiration - If expiration > 0, represents expiration time for the signature.  Otherwise
@@ -61,10 +78,10 @@ interface IAccountRegistry {
      * @param initData   - If initData is not empty and account has not yet been created, calls account with
      *                     provided initData after creation.
      *
-     * Emits AccountCreated event
-     * @return the address for which the Account Instance was created
-     */ 
-    function createAccount(
+     * Emits AccountAssigned event
+     * @return the address to which the Account Instance was assigned
+     */
+    function assignAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
@@ -83,8 +100,8 @@ interface IAccountRegistry {
 ```
 
 - The Account Registry MUST use an immutable account implementation address.
-- `createAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
-- `createAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
+- `assignAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
+- `assignAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
 - New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership SHOULD be assigned to the initial owner
 
 
@@ -104,8 +121,8 @@ While it might seem more user-friendly to implement and deploy a universal regis
 
 We are providing a reference Registry Factory which can deploy Account Registries for an external service, which comes with:
 - Immutable Account Instance implementation
-- Validation for the `createAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
-- Ability for the Account Registry deployer to change the signing addressed used for `createAccount` validation
+- Validation for the `assignAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
+- Ability for the Account Registry deployer to change the signing addressed used for `assignAccount` validation
 
 ### Account Registry and Account Implementation Coupling
 
@@ -413,7 +430,7 @@ contract ERC1967AccountImplementation is
 
 ### Front-running
 
-Deployment of reserved ownership accounts through an Account Registry Instance through calls to `createAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
+Deployment of reserved ownership accounts through an Account Registry Instance through calls to `assignAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
 
 ## Copyright
 

@@ -8,9 +8,26 @@ interface IAccountRegistry {
     event AccountCreated(address account, address implementation, uint256 salt);
 
     /**
+     * @dev Registry instances emit the AccountAssigned event upon successful account assignment
+     */
+    event AccountAssigned(address account, address owner);
+
+    /**
      * @dev Creates a smart contract account.
      *
      * If account has already been created, returns the account address without calling create2.
+     *
+     * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
+     *
+     * Emits AccountCreated event
+     * @return the address for which the Account Instance was created
+     */
+    function createAccount(uint256 salt) external returns (address);
+
+    /**
+     * @dev Assigns a smart contract account to a given owner.
+     *
+     * If the account has not already been created, the account will be created first using `createAccount`
      *
      * @param owner      - The initial owner of the new Account Instance
      * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
@@ -21,10 +38,10 @@ interface IAccountRegistry {
      * @param initData   - If initData is not empty and account has not yet been created, calls account with
      *                     provided initData after creation.
      *
-     * Emits AccountCreated event
-     * @return the address for which the Account Instance was created
+     * Emits AccountAssigned event
+     * @return the address to which the Account Instance was assigned
      */
-    function createAccount(
+    function assignAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
