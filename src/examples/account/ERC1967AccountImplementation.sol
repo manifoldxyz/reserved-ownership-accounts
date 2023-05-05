@@ -12,7 +12,8 @@ import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
-
+import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {IAccountRegistry} from "../../interfaces/IAccountRegistry.sol";
 import {IERC1967Account} from "./IERC1967Account.sol";
 
 /**
@@ -25,21 +26,18 @@ contract ERC1967AccountImplementation is
     IERC1155Receiver,
     IERC1967Account,
     IERC1271,
-    Initializable
+    Initializable,
+    Ownable
 {
-    address public owner;
+    address public registry;
 
     constructor() {
         _disableInitializers();
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not owner");
-        _;
-    }
-
-    function initialize(address owner_) external initializer {
-        owner = owner_;
+    function initialize(address registry_) external initializer {
+        registry = registry_;
+        _transferOwnership(registry_);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
@@ -94,17 +92,14 @@ contract ERC1967AccountImplementation is
         return _result;
     }
 
-    /**
-     * @dev {See IAccount-setOwner}
-     */
-    function setOwner(address newOwner) external override onlyOwner {
-        owner = newOwner;
-    }
-
     receive() external payable {}
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        bool isValid = SignatureChecker.isValidSignatureNow(owner, hash, signature);
+        if (owner() == registry) {
+            return IAccountRegistry(registry).isValidSignature(hash, signature);
+        }
+
+        bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
         if (isValid) {
             return IERC1271.isValidSignature.selector;
         }

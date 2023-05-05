@@ -25,7 +25,10 @@ contract ERC1967AccountProxy {
         (bool success, bytes memory data) = _implementation().delegatecall(
             abi.encodeWithSignature("owner()")
         );
-        require(success && abi.decode(data, (address)) == msg.sender, "Caller is not owner");
+        require(
+            success && abi.decode(data, (address)) == msg.sender,
+            "Ownable: caller is not the owner"
+        );
         _;
     }
 

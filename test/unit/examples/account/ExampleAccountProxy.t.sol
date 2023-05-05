@@ -24,23 +24,23 @@ contract ExampleAccountProxyTest is Test {
         assertEq(ERC1967AccountImplementation(payable(proxy)).owner(), accountOwner);
     }
 
-    function testSetOwner() public {
+    function testTransferOwnership() public {
         address newOwner = vm.addr(2);
 
         vm.prank(accountOwner);
 
-        ERC1967AccountImplementation(payable(proxy)).setOwner(newOwner);
+        ERC1967AccountImplementation(payable(proxy)).transferOwnership(newOwner);
 
         assertEq(ERC1967AccountImplementation(payable(proxy)).owner(), newOwner);
     }
 
-    function testSetOwner_RevertWhen_SenderNotOwner() public {
+    function testTransferOwnership_RevertWhen_SenderNotOwner() public {
         address newOwner = vm.addr(2);
 
         vm.prank(newOwner);
-        vm.expectRevert("Caller is not owner");
+        vm.expectRevert("Ownable: caller is not the owner");
 
-        ERC1967AccountImplementation(payable(proxy)).setOwner(newOwner);
+        ERC1967AccountImplementation(payable(proxy)).transferOwnership(newOwner);
     }
 
     function testInitialize_RevertWhen_AlreadyInitialized() public {
@@ -67,7 +67,7 @@ contract ExampleAccountProxyTest is Test {
     function testExecuteCall_RevertWhen_SenderNotOwner() public {
         vm.deal(address(proxy), 1 ether);
         vm.prank(vm.addr(2));
-        vm.expectRevert("Caller is not owner");
+        vm.expectRevert("Ownable: caller is not the owner");
 
         ERC1967AccountImplementation(payable(proxy)).executeCall(
             payable(accountOwner),
@@ -88,7 +88,7 @@ contract ExampleAccountProxyTest is Test {
     function testUpgrade_RevertWhen_SenderNotOwner() public {
         address newImplementation = address(new ERC1967AccountImplementation());
         vm.prank(vm.addr(2));
-        vm.expectRevert("Caller is not owner");
+        vm.expectRevert("Ownable: caller is not the owner");
 
         proxy.upgrade(newImplementation);
     }

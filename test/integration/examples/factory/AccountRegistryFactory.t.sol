@@ -34,7 +34,7 @@ contract AccountRegistryFactoryTest is Test {
 
         vm.startPrank(deployer);
         AccountRegistryImplementation newRegistry = AccountRegistryImplementation(
-            payable(factory.createRegistry(address(proxy), index))
+            payable(factory.createRegistry(address(proxy), address(implementation), index))
         );
         newRegistry.setSigner(signer);
         vm.stopPrank();
@@ -55,12 +55,7 @@ contract AccountRegistryFactoryTest is Test {
                     salt,
                     expiration,
                     message,
-                    abi.encodePacked(r, s, v),
-                    abi.encodeWithSignature(
-                        "initialize(address,bytes)",
-                        address(implementation),
-                        abi.encodeWithSignature("initialize(address)", accountOwner)
-                    )
+                    abi.encodePacked(r, s, v)
                 )
             )
         );

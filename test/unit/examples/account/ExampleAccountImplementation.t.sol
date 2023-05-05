@@ -21,23 +21,23 @@ contract ExampleAccountImplementationTest is Test {
         assertEq(implementation.owner(), accountOwner);
     }
 
-    function testSetOwner() public {
+    function testTransferOwnership() public {
         address newOwner = vm.addr(2);
 
         vm.prank(accountOwner);
 
-        implementation.setOwner(newOwner);
+        implementation.transferOwnership(newOwner);
 
         assertEq(implementation.owner(), newOwner);
     }
 
-    function testSetOwner_RevertWhen_SenderNotOwner() public {
+    function testTransferOwnership_RevertWhen_SenderNotOwner() public {
         address newOwner = vm.addr(2);
 
         vm.prank(newOwner);
-        vm.expectRevert("Caller is not owner");
+        vm.expectRevert("Ownable: caller is not the owner");
 
-        implementation.setOwner(newOwner);
+        implementation.transferOwnership(newOwner);
     }
 
     function testInitialize_RevertWhen_AlreadyInitialized() public {
@@ -60,7 +60,7 @@ contract ExampleAccountImplementationTest is Test {
     function testExecuteCall_RevertWhen_SenderNotOwner() public {
         vm.deal(address(implementation), 1 ether);
         vm.prank(vm.addr(2));
-        vm.expectRevert("Caller is not owner");
+        vm.expectRevert("Ownable: caller is not the owner");
 
         implementation.executeCall(payable(accountOwner), 0.5 ether, "");
     }

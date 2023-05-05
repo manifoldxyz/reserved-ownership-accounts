@@ -35,8 +35,6 @@ interface IAccountRegistry {
      *                     signature does not expire.
      * @param message    - The keccak256 message which validates the owner, salt, expiration
      * @param signature  - The signature which validates the owner, salt, expiration
-     * @param initData   - If initData is not empty and account has not yet been created, calls account with
-     *                     provided initData after creation.
      *
      * Emits AccountAssigned event
      * @return the address to which the Account Instance was assigned
@@ -46,8 +44,7 @@ interface IAccountRegistry {
         uint256 salt,
         uint256 expiration,
         bytes32 message,
-        bytes calldata signature,
-        bytes calldata initData
+        bytes calldata signature
     ) external returns (address);
 
     /**
@@ -56,4 +53,9 @@ interface IAccountRegistry {
      * @return the computed address of the account
      */
     function account(uint256 salt) external view returns (address);
+
+    /**
+     * @dev Fallback signature verifiaction for non-initialized accounts
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }
