@@ -109,6 +109,10 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         signer.isContract = signerSize > 0;
     }
 
+    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
+        accountImplementation = accountImplementation_;
+    }
+
     function _verify(
         address owner,
         uint256 salt,
