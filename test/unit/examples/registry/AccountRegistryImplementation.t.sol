@@ -26,7 +26,7 @@ contract AccountRegistryTest is Test {
             Clones.clone(address(new AccountRegistryImplementation()))
         );
         registry.initialize(address(proxy), address(implementation), address(this));
-        registry.setSigner(signer);
+        registry.updateSigner(signer);
     }
 
     function testAccount() public {
@@ -145,7 +145,7 @@ contract AccountRegistryTest is Test {
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
         mockSigner.mockIsValid(true);
-        registry.setSigner(address(mockSigner));
+        registry.updateSigner(address(mockSigner));
 
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
@@ -163,7 +163,7 @@ contract AccountRegistryTest is Test {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
-        registry.setSigner(address(mockSigner));
+        registry.updateSigner(address(mockSigner));
 
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
@@ -183,7 +183,7 @@ contract AccountRegistryTest is Test {
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
         mockSigner.mockIsValid(true);
-        registry.setSigner(address(mockSigner));
+        registry.updateSigner(address(mockSigner));
 
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
@@ -203,7 +203,7 @@ contract AccountRegistryTest is Test {
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
         mockSigner.mockIsValid(true);
-        registry.setSigner(address(mockSigner));
+        registry.updateSigner(address(mockSigner));
 
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
@@ -223,7 +223,7 @@ contract AccountRegistryTest is Test {
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
         mockSigner.mockIsValid(true);
-        registry.setSigner(address(mockSigner));
+        registry.updateSigner(address(mockSigner));
 
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;

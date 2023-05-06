@@ -36,7 +36,7 @@ contract AccountRegistryFactoryTest is Test {
         AccountRegistryImplementation newRegistry = AccountRegistryImplementation(
             payable(factory.createRegistry(address(proxy), address(implementation), index))
         );
-        newRegistry.setSigner(signer);
+        newRegistry.updateSigner(signer);
         vm.stopPrank();
 
         uint256 salt = 1;

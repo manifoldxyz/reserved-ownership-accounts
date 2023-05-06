@@ -27,7 +27,7 @@ contract AccountRegistryTest is Test {
             Clones.clone(address(new AccountRegistryImplementation()))
         );
         registry.initialize(address(proxy), address(implementation), address(this));
-        registry.setSigner(signer);
+        registry.updateSigner(signer);
     }
 
     function testCreateAccount() public {

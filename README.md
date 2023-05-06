@@ -301,13 +301,29 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
-    function setSigner(address newSigner) external onlyOwner {
+    /**
+     * @dev See {IAccountRegistry-isValidSignature}
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
+        if (isValid) {
+            return IERC1271.isValidSignature.selector;
+        }
+
+        return "";
+    }
+
+    function updateSigner(address newSigner) external onlyOwner {
         uint32 signerSize;
         assembly {
             signerSize := extcodesize(newSigner)
         }
         signer.account = newSigner;
         signer.isContract = signerSize > 0;
+    }
+
+    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
+        accountImplementation = accountImplementation_;
     }
 
     function _verify(
@@ -336,17 +352,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
             (expiration != 0 && expiration < block.timestamp)
         ) revert Unauthorized();
     }
-
-    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
-        if (isValid) {
-            return IERC1271.isValidSignature.selector;
-        }
-
-        return "";
-    }
 }
-
 ```
 
 ### Example Account Implementation
