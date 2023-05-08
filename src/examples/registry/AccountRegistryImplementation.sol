@@ -24,7 +24,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     error InitializationFailed();
-    error AssignmentFailed();
+    error ClaimFailed();
     error Unauthorized();
 
     address public implementation;
@@ -71,9 +71,9 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     /**
-     * @dev See {IAccountRegistry-assignAccount}
+     * @dev See {IAccountRegistry-claimAccount}
      */
-    function assignAccount(
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
@@ -86,9 +86,9 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         (bool success, ) = _account.call(
             abi.encodeWithSignature("transferOwnership(address)", owner)
         );
-        if (!success) revert AssignmentFailed();
+        if (!success) revert ClaimFailed();
 
-        emit AccountAssigned(_account, owner);
+        emit AccountClaimed(_account, owner);
         return _account;
     }
 

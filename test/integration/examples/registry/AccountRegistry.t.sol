@@ -42,7 +42,7 @@ contract AccountRegistryTest is Test {
 
         ERC1967AccountImplementation account = ERC1967AccountImplementation(
             payable(
-                registry.assignAccount(
+                registry.claimAccount(
                     accountOwner,
                     salt,
                     expiration,

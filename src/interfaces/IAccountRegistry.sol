@@ -8,9 +8,9 @@ interface IAccountRegistry {
     event AccountCreated(address account, address implementation, uint256 salt);
 
     /**
-     * @dev Registry instances emit the AccountAssigned event upon successful account assignment
+     * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
      */
-    event AccountAssigned(address account, address owner);
+    event AccountClaimed(address account, address owner);
 
     /**
      * @dev Creates a smart contract account.
@@ -25,7 +25,7 @@ interface IAccountRegistry {
     function createAccount(uint256 salt) external returns (address);
 
     /**
-     * @dev Assigns a smart contract account to a given owner.
+     * @dev Allows an owner to claim a smart contract account created by this registry.
      *
      * If the account has not already been created, the account will be created first using `createAccount`
      *
@@ -36,10 +36,10 @@ interface IAccountRegistry {
      * @param message    - The keccak256 message which validates the owner, salt, expiration
      * @param signature  - The signature which validates the owner, salt, expiration
      *
-     * Emits AccountAssigned event
-     * @return the address to which the Account Instance was assigned
+     * Emits AccountClaimed event
+     * @return the address of the claimed Account Instance
      */
-    function assignAccount(
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,

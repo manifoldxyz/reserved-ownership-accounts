@@ -44,9 +44,9 @@ interface IAccountRegistry {
     event AccountCreated(address account, address implementation, uint256 salt);
 
     /**
-     * @dev Registry instances emit the AccountAssigned event upon successful account assignment
+     * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
      */
-    event AccountAssigned(address account, address owner);
+    event AccountClaimed(address account, address owner);
 
     /**
      * @dev Creates a smart contract account.
@@ -61,7 +61,7 @@ interface IAccountRegistry {
     function createAccount(uint256 salt) external returns (address);
 
     /**
-     * @dev Assigns a smart contract account to a given owner.
+     * @dev Allows an owner to claim a smart contract account created by this registry.
      *
      * If the account has not already been created, the account will be created first using `createAccount`
      *
@@ -72,10 +72,10 @@ interface IAccountRegistry {
      * @param message    - The keccak256 message which validates the owner, salt, expiration
      * @param signature  - The signature which validates the owner, salt, expiration
      *
-     * Emits AccountAssigned event
-     * @return the address to which the Account Instance was assigned
+     * Emits AccountClaimed event
+     * @return the address of the claimed Account Instance
      */
-    function assignAccount(
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
@@ -98,8 +98,8 @@ interface IAccountRegistry {
 ```
 
 - The Account Registry MUST use an immutable account implementation address.
-- `assignAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
-- `assignAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
+- `claimAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
+- `claimAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
 - New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership SHOULD be assigned to the initial owner
 
 
@@ -119,8 +119,8 @@ While it might seem more user-friendly to implement and deploy a universal regis
 
 We are providing a reference Registry Factory which can deploy Account Registries for an external service, which comes with:
 - Immutable Account Instance implementation
-- Validation for the `assignAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
-- Ability for the Account Registry deployer to change the signing addressed used for `assignAccount` validation
+- Validation for the `claimAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
+- Ability for the Account Registry deployer to change the signing addressed used for `claimAccount` validation
 
 ### Account Registry and Account Implementation Coupling
 
@@ -225,7 +225,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     error InitializationFailed();
-    error AssignmentFailed();
+    error ClaimFailed();
     error Unauthorized();
 
     address public implementation;
@@ -272,9 +272,9 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     /**
-     * @dev See {IAccountRegistry-assignAccount}
+     * @dev See {IAccountRegistry-claimAccount}
      */
-    function assignAccount(
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
@@ -287,9 +287,9 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         (bool success, ) = _account.call(
             abi.encodeWithSignature("transferOwnership(address)", owner)
         );
-        if (!success) revert AssignmentFailed();
+        if (!success) revert ClaimFailed();
 
-        emit AccountAssigned(_account, owner);
+        emit AccountClaimed(_account, owner);
         return _account;
     }
 
@@ -474,7 +474,7 @@ contract ERC1967AccountImplementation is
 
 ### Front-running
 
-Deployment of reserved ownership accounts through an Account Registry Instance through calls to `assignAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
+Deployment of reserved ownership accounts through an Account Registry Instance through calls to `claimAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
 
 ## Copyright
 

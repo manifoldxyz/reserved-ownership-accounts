@@ -37,7 +37,7 @@ contract AccountRegistryTest is Test {
         assertNotEq(account, address(0));
     }
 
-    function testAssignAccount() public {
+    function testclaimAccount() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -47,10 +47,10 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_DifferentSender() public {
+    function testclaimAccount_DifferentSender() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -60,10 +60,10 @@ contract AccountRegistryTest is Test {
 
         vm.prank(vm.addr(2));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_RevertWhen_DifferentSigner() public {
+    function testclaimAccount_RevertWhen_DifferentSigner() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -74,10 +74,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_RevertWhen_PastExpiration() public {
+    function testclaimAccount_RevertWhen_PastExpiration() public {
         vm.warp(100);
 
         uint256 salt = 1;
@@ -90,10 +90,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_RevertWhen_DifferentMessageAccount() public {
+    function testclaimAccount_RevertWhen_DifferentMessageAccount() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -104,10 +104,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_RevertWhen_DifferentMessageSalt() public {
+    function testclaimAccount_RevertWhen_DifferentMessageSalt() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -118,10 +118,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_RevertWhen_DifferentMessageExpiration() public {
+    function testclaimAccount_RevertWhen_DifferentMessageExpiration() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -137,10 +137,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_ContractSigner() public {
+    function testclaimAccount_ContractSigner() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -156,10 +156,10 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_ContractSigner_RevertWhen_InvalidSignature() public {
+    function testclaimAccount_ContractSigner_RevertWhen_InvalidSignature() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -175,10 +175,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
+    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -195,10 +195,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
+    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -215,10 +215,10 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testAssignAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
+    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -240,7 +240,7 @@ contract AccountRegistryTest is Test {
         vm.prank(accountOwner);
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized()"))));
 
-        registry.assignAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
+        registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
     function test_AddressesMatch() public {
@@ -256,7 +256,7 @@ contract AccountRegistryTest is Test {
 
         vm.prank(accountOwner);
 
-        address created = registry.assignAccount(
+        address created = registry.claimAccount(
             accountOwner,
             salt,
             expiration,
