@@ -37,7 +37,7 @@ contract AccountRegistryTest is Test {
         assertNotEq(account, address(0));
     }
 
-    function testclaimAccount() public {
+    function testClaimAccount() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -50,7 +50,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_DifferentSender() public {
+    function testClaimAccount_DifferentSender() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -63,7 +63,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_RevertWhen_DifferentSigner() public {
+    function testClaimAccount_RevertWhen_DifferentSigner() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -77,7 +77,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_RevertWhen_PastExpiration() public {
+    function testClaimAccount_RevertWhen_PastExpiration() public {
         vm.warp(100);
 
         uint256 salt = 1;
@@ -93,7 +93,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_RevertWhen_DifferentMessageAccount() public {
+    function testClaimAccount_RevertWhen_DifferentMessageAccount() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -107,7 +107,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_RevertWhen_DifferentMessageSalt() public {
+    function testClaimAccount_RevertWhen_DifferentMessageSalt() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -121,7 +121,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_RevertWhen_DifferentMessageExpiration() public {
+    function testClaimAccount_RevertWhen_DifferentMessageExpiration() public {
         uint256 salt = 1;
         uint256 expiration = block.timestamp + 10000;
         bytes32 message = keccak256(
@@ -140,7 +140,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_ContractSigner() public {
+    function testClaimAccount_ContractSigner() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -159,7 +159,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_ContractSigner_RevertWhen_InvalidSignature() public {
+    function testClaimAccount_ContractSigner_RevertWhen_InvalidSignature() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -178,7 +178,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
+    function testClaimAccount_ContractSigner_RevertWhen_DifferentMessageAccount() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -198,7 +198,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
+    function testClaimAccount_ContractSigner_RevertWhen_DifferentMessageSalt() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
@@ -218,7 +218,7 @@ contract AccountRegistryTest is Test {
         registry.claimAccount(accountOwner, salt, expiration, message, abi.encodePacked(r, s, v));
     }
 
-    function testclaimAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
+    function testClaimAccount_ContractSigner_RevertWhen_DifferentMessageExpiration() public {
         uint256 signerOwnerPrivateKey = 0x2;
         vm.prank(vm.addr(signerOwnerPrivateKey));
         MockSigner mockSigner = new MockSigner();
