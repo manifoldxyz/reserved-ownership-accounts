@@ -13,7 +13,6 @@ import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
-import {IAccountRegistry} from "../../interfaces/IAccountRegistry.sol";
 import {IERC1967Account} from "./IERC1967Account.sol";
 
 /**
@@ -96,7 +95,7 @@ contract ERC1967AccountImplementation is
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         if (owner() == registry) {
-            return IAccountRegistry(registry).isValidSignature(hash, signature);
+            return IERC1271(registry).isValidSignature(hash, signature);
         }
 
         bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
