@@ -25,7 +25,7 @@ contract MockAccount is IERC1967Account, IERC165 {
         revert("disabled");
     }
 
-    function setOwner(address) external pure {
+    function transferOwnership(address) external pure {
         revert("disabled");
     }
 

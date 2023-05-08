@@ -11,8 +11,4 @@ interface IERC1967Account {
         uint256 value,
         bytes calldata data
     ) external payable returns (bytes memory);
-
-    function owner() external view returns (address);
-
-    function setOwner(address newOwner) external;
 }

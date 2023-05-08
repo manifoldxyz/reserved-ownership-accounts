@@ -16,7 +16,11 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
 
-    function createRegistry(address implementation, uint96 index) external returns (address) {
+    function createRegistry(
+        address implementation,
+        address accountImplementation,
+        uint96 index
+    ) external returns (address) {
         bytes32 salt = _getSalt(msg.sender, index);
         bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
         address _registry = Create2.computeAddress(salt, keccak256(code));
@@ -26,7 +30,12 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         _registry = Create2.deploy(0, salt, code);
 
         (bool success, ) = _registry.call(
-            abi.encodeWithSignature("initialize(address,address)", implementation, msg.sender)
+            abi.encodeWithSignature(
+                "initialize(address,address,address)",
+                implementation,
+                accountImplementation,
+                msg.sender
+            )
         );
         if (!success) revert InitializationFailed();
 

@@ -8,9 +8,26 @@ interface IAccountRegistry {
     event AccountCreated(address account, address implementation, uint256 salt);
 
     /**
+     * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
+     */
+    event AccountClaimed(address account, address owner);
+
+    /**
      * @dev Creates a smart contract account.
      *
      * If account has already been created, returns the account address without calling create2.
+     *
+     * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
+     *
+     * Emits AccountCreated event
+     * @return the address for which the Account Instance was created
+     */
+    function createAccount(uint256 salt) external returns (address);
+
+    /**
+     * @dev Allows an owner to claim a smart contract account created by this registry.
+     *
+     * If the account has not already been created, the account will be created first using `createAccount`
      *
      * @param owner      - The initial owner of the new Account Instance
      * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
@@ -18,19 +35,16 @@ interface IAccountRegistry {
      *                     signature does not expire.
      * @param message    - The keccak256 message which validates the owner, salt, expiration
      * @param signature  - The signature which validates the owner, salt, expiration
-     * @param initData   - If initData is not empty and account has not yet been created, calls account with
-     *                     provided initData after creation.
      *
-     * Emits AccountCreated event
-     * @return the address for which the Account Instance was created
+     * Emits AccountClaimed event
+     * @return the address of the claimed Account Instance
      */
-    function createAccount(
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
         bytes32 message,
-        bytes calldata signature,
-        bytes calldata initData
+        bytes calldata signature
     ) external returns (address);
 
     /**
@@ -39,4 +53,9 @@ interface IAccountRegistry {
      * @return the computed address of the account
      */
     function account(uint256 salt) external view returns (address);
+
+    /**
+     * @dev Fallback signature verifiaction for non-initialized accounts
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }

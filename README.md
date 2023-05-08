@@ -41,50 +41,65 @@ interface IAccountRegistry {
     /**
      * @dev Registry instances emit the AccountCreated event upon successful account creation
      */
-    event AccountCreated(
-        address account,
-        address implementation,
-        uint256 salt
-    );
+    event AccountCreated(address account, address implementation, uint256 salt);
+
+    /**
+     * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
+     */
+    event AccountClaimed(address account, address owner);
 
     /**
      * @dev Creates a smart contract account.
      *
      * If account has already been created, returns the account address without calling create2.
-     * 
+     *
+     * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
+     *
+     * Emits AccountCreated event
+     * @return the address for which the Account Instance was created
+     */
+    function createAccount(uint256 salt) external returns (address);
+
+    /**
+     * @dev Allows an owner to claim a smart contract account created by this registry.
+     *
+     * If the account has not already been created, the account will be created first using `createAccount`
+     *
      * @param owner      - The initial owner of the new Account Instance
      * @param salt       - The identifying salt for which the user wishes to deploy an Account Instance
      * @param expiration - If expiration > 0, represents expiration time for the signature.  Otherwise
      *                     signature does not expire.
      * @param message    - The keccak256 message which validates the owner, salt, expiration
      * @param signature  - The signature which validates the owner, salt, expiration
-     * @param initData   - If initData is not empty and account has not yet been created, calls account with
-     *                     provided initData after creation.
      *
-     * Emits AccountCreated event
-     * @return the address for which the Account Instance was created
-     */ 
-    function createAccount(
+     * Emits AccountClaimed event
+     * @return the address of the claimed Account Instance
+     */
+    function claimAccount(
         address owner,
         uint256 salt,
         uint256 expiration,
         bytes32 message,
-        bytes calldata signature,
-        bytes calldata initData
+        bytes calldata signature
     ) external returns (address);
 
     /**
      * @dev Returns the computed address of a smart contract account for a given identifying salt
      *
      * @return the computed address of the account
-     */ 
+     */
     function account(uint256 salt) external view returns (address);
+
+    /**
+     * @dev Fallback signature verifiaction for non-initialized accounts
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }
 ```
 
 - The Account Registry MUST use an immutable account implementation address.
-- `createAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
-- `createAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
+- `claimAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
+- `claimAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
 - New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership SHOULD be assigned to the initial owner
 
 
@@ -104,8 +119,8 @@ While it might seem more user-friendly to implement and deploy a universal regis
 
 We are providing a reference Registry Factory which can deploy Account Registries for an external service, which comes with:
 - Immutable Account Instance implementation
-- Validation for the `createAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
-- Ability for the Account Registry deployer to change the signing addressed used for `createAccount` validation
+- Validation for the `claimAccount` method via ECDSA for EOA signers, or ERC-1271 validation for smart contract signers
+- Ability for the Account Registry deployer to change the signing addressed used for `claimAccount` validation
 
 ### Account Registry and Account Implementation Coupling
 
@@ -140,7 +155,11 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
 
-    function createRegistry(address implementation, uint96 index) external returns (address) {
+    function createRegistry(
+        address implementation,
+        address accountImplementation,
+        uint96 index
+    ) external returns (address) {
         bytes32 salt = _getSalt(msg.sender, index);
         bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
         address _registry = Create2.computeAddress(salt, keccak256(code));
@@ -150,7 +169,12 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         _registry = Create2.deploy(0, salt, code);
 
         (bool success, ) = _registry.call(
-            abi.encodeWithSignature("initialize(address,address)", implementation, msg.sender)
+            abi.encodeWithSignature(
+                "initialize(address,address,address)",
+                implementation,
+                accountImplementation,
+                msg.sender
+            )
         );
         if (!success) revert InitializationFailed();
 
@@ -169,6 +193,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         return bytes32(abi.encodePacked(deployer, index));
     }
 }
+
 ```
 
 ### Account Registry
@@ -200,32 +225,31 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     error InitializationFailed();
+    error ClaimFailed();
     error Unauthorized();
 
     address public implementation;
+    address public accountImplementation;
     Signer private signer;
 
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address implementation_, address owner) external initializer {
+    function initialize(
+        address implementation_,
+        address accountImplementation_,
+        address owner
+    ) external initializer {
         implementation = implementation_;
+        accountImplementation = accountImplementation_;
         _transferOwnership(owner);
     }
 
     /**
      * @dev See {IAccountRegistry-createAccount}
      */
-    function createAccount(
-        address owner,
-        uint256 salt,
-        uint256 expiration,
-        bytes32 message,
-        bytes calldata signature,
-        bytes calldata initData
-    ) external override returns (address) {
-        _verify(owner, salt, expiration, message, signature);
+    function createAccount(uint256 salt) external override returns (address) {
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
@@ -233,13 +257,39 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
 
         _account = Create2.deploy(0, bytes32(salt), code);
 
-        if (initData.length != 0) {
-            (bool success, ) = _account.call(initData);
-            if (!success) revert InitializationFailed();
-        }
+        (bool success, ) = _account.call(
+            abi.encodeWithSignature(
+                "initialize(address,bytes)",
+                accountImplementation,
+                abi.encodeWithSignature("initialize(address)", address(this))
+            )
+        );
+        if (!success) revert InitializationFailed();
 
         emit AccountCreated(_account, implementation, salt);
 
+        return _account;
+    }
+
+    /**
+     * @dev See {IAccountRegistry-claimAccount}
+     */
+    function claimAccount(
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature
+    ) external override returns (address) {
+        _verify(owner, salt, expiration, message, signature);
+        address _account = this.createAccount(salt);
+
+        (bool success, ) = _account.call(
+            abi.encodeWithSignature("transferOwnership(address)", owner)
+        );
+        if (!success) revert ClaimFailed();
+
+        emit AccountClaimed(_account, owner);
         return _account;
     }
 
@@ -251,13 +301,29 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
-    function setSigner(address newSigner) external onlyOwner {
+    /**
+     * @dev See {IAccountRegistry-isValidSignature}
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
+        if (isValid) {
+            return IERC1271.isValidSignature.selector;
+        }
+
+        return "";
+    }
+
+    function updateSigner(address newSigner) external onlyOwner {
         uint32 signerSize;
         assembly {
             signerSize := extcodesize(newSigner)
         }
         signer.account = newSigner;
         signer.isContract = signerSize > 0;
+    }
+
+    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
+        accountImplementation = accountImplementation_;
     }
 
     function _verify(
@@ -306,7 +372,8 @@ import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
-
+import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {IAccountRegistry} from "../../interfaces/IAccountRegistry.sol";
 import {IERC1967Account} from "./IERC1967Account.sol";
 
 /**
@@ -319,22 +386,18 @@ contract ERC1967AccountImplementation is
     IERC1155Receiver,
     IERC1967Account,
     IERC1271,
-    Initializable
+    Initializable,
+    Ownable
 {
-    address public owner;
+    address public registry;
 
     constructor() {
         _disableInitializers();
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not owner");
-        _;
-    }
-
-    function initialize(address owner_) external {
-        require(owner == address(0), "Already initialized");
-        owner = owner_;
+    function initialize(address registry_) external initializer {
+        registry = registry_;
+        _transferOwnership(registry_);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
@@ -389,17 +452,14 @@ contract ERC1967AccountImplementation is
         return _result;
     }
 
-    /**
-     * @dev {See IAccount-setOwner}
-     */
-    function setOwner(address newOwner) external override onlyOwner {
-        owner = newOwner;
-    }
-
     receive() external payable {}
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        bool isValid = SignatureChecker.isValidSignatureNow(owner, hash, signature);
+        if (owner() == registry) {
+            return IAccountRegistry(registry).isValidSignature(hash, signature);
+        }
+
+        bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
         if (isValid) {
             return IERC1271.isValidSignature.selector;
         }
@@ -407,13 +467,14 @@ contract ERC1967AccountImplementation is
         return "";
     }
 }
+
 ```
 
 ## Security Considerations
 
 ### Front-running
 
-Deployment of reserved ownership accounts through an Account Registry Instance through calls to `createAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
+Deployment of reserved ownership accounts through an Account Registry Instance through calls to `claimAccount` could be front-run by a malicious actor. However, if the malicious actor attempted to alter the `owner` parameter in the calldata, the Account Registry Instance would find the signature to be invalid, and revert the transaction. Thus, any successful front-running transaction would deploy an identical Account Instance to the original transaction, and the original owner would still gain control over the address.
 
 ## Copyright
 

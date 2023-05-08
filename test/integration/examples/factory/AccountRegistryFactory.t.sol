@@ -34,9 +34,9 @@ contract AccountRegistryFactoryTest is Test {
 
         vm.startPrank(deployer);
         AccountRegistryImplementation newRegistry = AccountRegistryImplementation(
-            payable(factory.createRegistry(address(proxy), index))
+            payable(factory.createRegistry(address(proxy), address(implementation), index))
         );
-        newRegistry.setSigner(signer);
+        newRegistry.updateSigner(signer);
         vm.stopPrank();
 
         uint256 salt = 1;
@@ -50,17 +50,12 @@ contract AccountRegistryFactoryTest is Test {
 
         ERC1967AccountImplementation account = ERC1967AccountImplementation(
             payable(
-                newRegistry.createAccount(
+                newRegistry.claimAccount(
                     accountOwner,
                     salt,
                     expiration,
                     message,
-                    abi.encodePacked(r, s, v),
-                    abi.encodeWithSignature(
-                        "initialize(address,bytes)",
-                        address(implementation),
-                        abi.encodeWithSignature("initialize(address)", accountOwner)
-                    )
+                    abi.encodePacked(r, s, v)
                 )
             )
         );

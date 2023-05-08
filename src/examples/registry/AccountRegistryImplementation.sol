@@ -24,32 +24,31 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     }
 
     error InitializationFailed();
+    error ClaimFailed();
     error Unauthorized();
 
     address public implementation;
+    address public accountImplementation;
     Signer private signer;
 
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address implementation_, address owner) external initializer {
+    function initialize(
+        address implementation_,
+        address accountImplementation_,
+        address owner
+    ) external initializer {
         implementation = implementation_;
+        accountImplementation = accountImplementation_;
         _transferOwnership(owner);
     }
 
     /**
      * @dev See {IAccountRegistry-createAccount}
      */
-    function createAccount(
-        address owner,
-        uint256 salt,
-        uint256 expiration,
-        bytes32 message,
-        bytes calldata signature,
-        bytes calldata initData
-    ) external override returns (address) {
-        _verify(owner, salt, expiration, message, signature);
+    function createAccount(uint256 salt) external override returns (address) {
         bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
@@ -57,13 +56,39 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
 
         _account = Create2.deploy(0, bytes32(salt), code);
 
-        if (initData.length != 0) {
-            (bool success, ) = _account.call(initData);
-            if (!success) revert InitializationFailed();
-        }
+        (bool success, ) = _account.call(
+            abi.encodeWithSignature(
+                "initialize(address,bytes)",
+                accountImplementation,
+                abi.encodeWithSignature("initialize(address)", address(this))
+            )
+        );
+        if (!success) revert InitializationFailed();
 
         emit AccountCreated(_account, implementation, salt);
 
+        return _account;
+    }
+
+    /**
+     * @dev See {IAccountRegistry-claimAccount}
+     */
+    function claimAccount(
+        address owner,
+        uint256 salt,
+        uint256 expiration,
+        bytes32 message,
+        bytes calldata signature
+    ) external override returns (address) {
+        _verify(owner, salt, expiration, message, signature);
+        address _account = this.createAccount(salt);
+
+        (bool success, ) = _account.call(
+            abi.encodeWithSignature("transferOwnership(address)", owner)
+        );
+        if (!success) revert ClaimFailed();
+
+        emit AccountClaimed(_account, owner);
         return _account;
     }
 
@@ -75,13 +100,29 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
-    function setSigner(address newSigner) external onlyOwner {
+    /**
+     * @dev See {IAccountRegistry-isValidSignature}
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
+        if (isValid) {
+            return IERC1271.isValidSignature.selector;
+        }
+
+        return "";
+    }
+
+    function updateSigner(address newSigner) external onlyOwner {
         uint32 signerSize;
         assembly {
             signerSize := extcodesize(newSigner)
         }
         signer.account = newSigner;
         signer.isContract = signerSize > 0;
+    }
+
+    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
+        accountImplementation = accountImplementation_;
     }
 
     function _verify(
