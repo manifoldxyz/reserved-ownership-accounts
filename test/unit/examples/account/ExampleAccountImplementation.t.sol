@@ -22,6 +22,25 @@ contract ExampleAccountImplementationTest is Test {
         assertEq(accountImplementation.owner(), accountOwner);
     }
 
+    function testSetOwner() public {
+        address newOwner = vm.addr(2);
+
+        vm.prank(accountOwner);
+
+        accountImplementation.setOwner(newOwner);
+
+        assertEq(accountImplementation.owner(), newOwner);
+    }
+
+    function testSetOwner_RevertWhen_SenderNotOwner() public {
+        address newOwner = vm.addr(2);
+
+        vm.prank(newOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        accountImplementation.setOwner(newOwner);
+    }
+
     function testTransferOwnership() public {
         address newOwner = vm.addr(2);
 

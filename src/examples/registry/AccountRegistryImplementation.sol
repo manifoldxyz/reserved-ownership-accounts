@@ -77,9 +77,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         _verify(owner, salt, expiration, message, signature);
         address _account = this.createAccount(salt);
 
-        (bool success, ) = _account.call(
-            abi.encodeWithSignature("transferOwnership(address)", owner)
-        );
+        (bool success, ) = _account.call(abi.encodeWithSignature("setOwner(address)", owner));
         if (!success) revert ClaimFailed();
 
         emit AccountClaimed(_account, owner);

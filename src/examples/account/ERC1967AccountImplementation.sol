@@ -15,11 +15,14 @@ import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
 import {IERC1967Account} from "./IERC1967Account.sol";
 
+import {IAccount} from "../../interfaces/IAccount.sol";
+
 /**
  * @title ERC1967AccountImplementation
  * @notice A lightweight, upgradeable smart contract wallet implementation
  */
 contract ERC1967AccountImplementation is
+    IAccount,
     IERC165,
     IERC721Receiver,
     IERC1155Receiver,
@@ -40,7 +43,8 @@ contract ERC1967AccountImplementation is
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return (interfaceId == type(IERC1967Account).interfaceId ||
+        return (interfaceId == type(IAccount).interfaceId ||
+            interfaceId == type(IERC1967Account).interfaceId ||
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             interfaceId == type(IERC165).interfaceId);
@@ -76,7 +80,7 @@ contract ERC1967AccountImplementation is
     }
 
     /**
-     * @dev {See IAccount-executeCall}
+     * @dev {See IERC1967Account-executeCall}
      */
     function executeCall(
         address _target,
@@ -89,6 +93,13 @@ contract ERC1967AccountImplementation is
         require(success, string(_result));
         emit TransactionExecuted(_target, _value, _data);
         return _result;
+    }
+
+    /**
+     * @dev {See IAccount-setOwner}
+     */
+    function setOwner(address _owner) external override onlyOwner {
+        _transferOwnership(_owner);
     }
 
     receive() external payable {}

@@ -28,10 +28,10 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 The system for creating deferred custody accounts consists of:
 
-1. An Account Registry which provides a deterministic smart contract address for an external service based on an identifying salt, and a signature verified function that allows for the deployment and control of Account Instances by the end user
-2. Account Instances created by the Account Registry for the end user which allow access to the assets received at the deterministic address prior to Account Instance deployment.
+1. An Account Registry which provides a deterministic smart contract address for an external service based on an identifying salt, and a function guarded by verifiable signatures that allows for the deployment and control of Account Instances by the end user.
+2. Account Instances created by the Account Registry for the end user which allow access to the assets received at the deterministic address prior to Account Instance deployment and ownership assignment.
 
-External services wishing to provide their users with reserved ownership accounts MUST maintain a relationship between a user's identifying credentials and a salt. The external service SHALL refer to an Account Registry Instance to retrieve the deterministic account address for a given salt. Users from a given service MUST be able to create an Account Instance by validating their identifying credentials via the external service, which SHOULD give the user a valid signature for their salt. Users SHALL pass this signature to the service's Account Registry Instance in a call to `createAccount` to create an Account Instance at the deterministic address.
+External services wishing to provide their users with reserved ownership accounts MUST maintain a relationship between a user's identifying credentials and a salt. The external service SHALL refer to an Account Registry Instance to retrieve the deterministic account address for a given salt. Users from a given service MUST be able to create an Account Instance by validating their identifying credentials via the external service, which SHOULD give the user a valid signature for their salt. Users SHALL pass this signature to the service's Account Registry Instance in a call to `claimAccount` to claim ownership of an Account Instance at the deterministic address.
 
 ### Account Registry
 The Account Registry MUST implement the following interface:
@@ -98,18 +98,32 @@ interface IAccountRegistry {
 ```
 
 - The Account Registry MUST use an immutable account implementation address.
-- `claimAccount` SHOULD verify that the msg.sender has permission to deploy the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
+- `createAccount` SHOULD deploy new Account Instances as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies
+- `claimAccount` SHOULD verify that the msg.sender has permission to claim ownership over the Account Instance for the identifying salt and initial owner. Verification SHOULD be done by validating the message and signature against the owner, salt and expiration using ECDSA for EOA signers, or EIP-1271 for smart contract signers
 - `claimAccount` SHOULD verify that the block.timestamp < expiration or that expiration == 0
-- New accounts SHOULD be deployed as [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) proxies and ownership SHOULD be assigned to the initial owner
-
+- Upon successful signature verification on calls to `claimAccount`, the registry MUST completely relinquish control over the Account Instance, and assign ownership to the initial owner by calling `setOwner` on the Account Instance
 
 ### Account Instance
-The Account Instance can be any smart contract wallet implementation.
+The Account Instance MUST implement the following interface:
+
+```solidity
+interface IAccount {
+    /**
+     * @dev Sets the owner of the Account Instance.
+     *
+     * Only callable by the current owner of the instance, or by the registry if the Account
+     * Instance has not yet been claimed.
+     *
+     * @param owner      - The new owner of the Account Instance
+     */
+    function setOwner(address owner) external;
+}
+```
 
 - All Account Instances MUST be created using an Account Registry Instance
+- `setOwner` SHOULD be callable by the current owner of the Account Instance, and MUST be callable by the deploying Account Registry Instance if the Account Instance has not yet been claimed
 - Account Instance SHOULD support [EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)
 - Account Instance SHOULD provide access to assets previously sent to the address at which the Account Instance is deployed to
-
 
 ## Rationale
 
@@ -129,6 +143,10 @@ Since Account Instances are deployed as [ERC-1167](https://eips.ethereum.org/EIP
 This also allows services to gain the the trust of users by deploying their registries with a reference to a trusted account implementation address.
 
 Furthermore, account implementations can be designed as upgradeable, so users are not necessarily bound to the implementation specified by the Account Registry Instance used to create their account.
+
+### Separate `createAccount` and `claimAccount` Operations
+
+Operations to create and claim Account Instances are intentionally separate. This allows services to provide users with valid [ERC-6492](https://eips.ethereum.org/EIPS/eip-6492) signatures before the Account Instance has been deployed or claimed.
 
 ## Reference Implementation
 
@@ -456,6 +474,14 @@ contract ERC1967AccountImplementation is
     }
 }
 ```
+
+## Usage Example
+
+As an external service wishing to provide users with reserved ownership accounts, one could deploy an Account Registry Instance by calling `createRegistry` on the factory contract deployed at address `TBD` with the account implementation located at `TBD`. One would then set the signer on the newly created registry to the public key of an EOA or the address of a contract signer under their control. One would also devise a system to map unique `salt` values to each user (e.g. by taking the `keccak256` value of the user's ID).
+
+The service can now associate each user with an Ethereum address without requiring the user to create or link an EOA. This is particularly useful for services without a crypto-native audience that wish to afford their users the benefits of on-chain ownership and history. For example, a social media service could mint user posts to their reserved ownership accounts as NFTs.
+
+The service can provide an interface for users to claim ownership over their addresses when they are ready to do so. The interface would provide valid calldata to the user, and initiate the `claimAccount` transaction on the Account Registry Instance based on the user's browser wallet, the `salt` linked to the user, and the signer controlled by the service. After the transaction succeeds, the service maintains no control over the address.
 
 ## Security Considerations
 
