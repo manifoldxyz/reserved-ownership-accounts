@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
 import {IERC165} from "openzeppelin/utils/introspection/IERC165.sol";

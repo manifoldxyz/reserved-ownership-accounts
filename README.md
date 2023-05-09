@@ -137,7 +137,7 @@ The following is an example of an Account Registry Factory which can be used by 
 ### Account Registry Factory
 
 ```solidity
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
 /// @author: manifold.xyz
@@ -199,7 +199,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 ### Account Registry
 
 ```solidity
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
 /// @author: manifold.xyz
@@ -358,7 +358,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
 ### Example Account Implementation
 
 ```solidity
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 
 pragma solidity ^0.8.13;
 
