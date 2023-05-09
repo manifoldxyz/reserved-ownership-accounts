@@ -1,7 +1,7 @@
 ---
 title: Reserved Ownership Accounts
 description: A registry for generating future-deployed smart contract accounts owned by users on external services
-author: Paul Sullivan (@sullivph) <paul.sullivan@manifold.xyz>, Wilkins Chung (@wwchung) <wilkins@manifold.xyz>
+author: Paul Sullivan (@sullivph) <paul.sullivan@manifold.xyz>, Wilkins Chung (@wwchung) <wilkins@manifold.xyz>, Kartik Patel (@Slokh) <kartik@manifold.xyz>
 discussions-to: <URL>
 status: Draft
 type: Standards Track
