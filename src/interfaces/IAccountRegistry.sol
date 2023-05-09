@@ -5,7 +5,7 @@ interface IAccountRegistry {
     /**
      * @dev Registry instances emit the AccountCreated event upon successful account creation
      */
-    event AccountCreated(address account, address implementation, uint256 salt);
+    event AccountCreated(address account, address accountImplementation, uint256 salt);
 
     /**
      * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
@@ -55,7 +55,7 @@ interface IAccountRegistry {
     function account(uint256 salt) external view returns (address);
 
     /**
-     * @dev Fallback signature verifiaction for non-initialized accounts
+     * @dev Fallback signature verification for unclaimed accounts
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }

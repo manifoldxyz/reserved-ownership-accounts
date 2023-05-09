@@ -24,7 +24,7 @@ contract AccountRegistryFactoryTest is Test {
     function testCreateRegistry() public {
         uint96 index = 1;
 
-        address registry = factory.createRegistry(deployer, deployer, index);
+        address registry = factory.createRegistry(index, vm.addr(2), "");
 
         assertNotEq(registry, address(0));
     }
@@ -36,7 +36,7 @@ contract AccountRegistryFactoryTest is Test {
 
         vm.prank(deployer);
 
-        address created = factory.createRegistry(vm.addr(2), vm.addr(2), index);
+        address created = factory.createRegistry(index, vm.addr(2), "");
 
         assertEq(created, registry);
     }

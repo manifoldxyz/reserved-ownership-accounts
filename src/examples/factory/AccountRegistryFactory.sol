@@ -17,9 +17,9 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
     address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
 
     function createRegistry(
-        address implementation,
+        uint96 index,
         address accountImplementation,
-        uint96 index
+        bytes calldata accountInitData
     ) external returns (address) {
         bytes32 salt = _getSalt(msg.sender, index);
         bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
@@ -31,15 +31,15 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
         (bool success, ) = _registry.call(
             abi.encodeWithSignature(
-                "initialize(address,address,address)",
-                implementation,
+                "initialize(address,address,bytes)",
+                msg.sender,
                 accountImplementation,
-                msg.sender
+                accountInitData
             )
         );
         if (!success) revert InitializationFailed();
 
-        emit AccountRegistryCreated(_registry, implementation, index);
+        emit AccountRegistryCreated(_registry, accountImplementation, index);
 
         return _registry;
     }

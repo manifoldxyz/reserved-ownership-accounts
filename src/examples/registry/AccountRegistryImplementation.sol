@@ -27,45 +27,39 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     error ClaimFailed();
     error Unauthorized();
 
-    address public implementation;
     address public accountImplementation;
-    Signer private signer;
+    bytes public accountInitData;
+    Signer public signer;
 
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
-        address implementation_,
+        address owner,
         address accountImplementation_,
-        address owner
+        bytes calldata accountInitData_
     ) external initializer {
-        implementation = implementation_;
-        accountImplementation = accountImplementation_;
         _transferOwnership(owner);
+        accountImplementation = accountImplementation_;
+        accountInitData = accountInitData_;
     }
 
     /**
      * @dev See {IAccountRegistry-createAccount}
      */
     function createAccount(uint256 salt) external override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(accountImplementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
         if (_account.isDeployed()) return _account;
 
         _account = Create2.deploy(0, bytes32(salt), code);
 
-        (bool success, ) = _account.call(
-            abi.encodeWithSignature(
-                "initialize(address,bytes)",
-                accountImplementation,
-                abi.encodeWithSignature("initialize(address)", address(this))
-            )
-        );
+        (bool success, ) = _account.call(accountInitData);
         if (!success) revert InitializationFailed();
 
-        emit AccountCreated(_account, implementation, salt);
+        emit AccountCreated(_account, accountImplementation, salt);
 
         return _account;
     }
@@ -96,7 +90,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-account}
      */
     function account(uint256 salt) external view override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(accountImplementation);
         return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
@@ -119,10 +113,6 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         }
         signer.account = newSigner;
         signer.isContract = signerSize > 0;
-    }
-
-    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
-        accountImplementation = accountImplementation_;
     }
 
     function _verify(

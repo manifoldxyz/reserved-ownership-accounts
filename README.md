@@ -41,7 +41,7 @@ interface IAccountRegistry {
     /**
      * @dev Registry instances emit the AccountCreated event upon successful account creation
      */
-    event AccountCreated(address account, address implementation, uint256 salt);
+    event AccountCreated(address account, address accountImplementation, uint256 salt);
 
     /**
      * @dev Registry instances emit the AccountClaimed event upon successful claim of account by owner
@@ -91,7 +91,7 @@ interface IAccountRegistry {
     function account(uint256 salt) external view returns (address);
 
     /**
-     * @dev Fallback signature verifiaction for non-initialized accounts
+     * @dev Fallback signature verification for unclaimed accounts
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }
@@ -156,9 +156,9 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
     address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
 
     function createRegistry(
-        address implementation,
+        uint96 index,
         address accountImplementation,
-        uint96 index
+        bytes calldata accountInitData
     ) external returns (address) {
         bytes32 salt = _getSalt(msg.sender, index);
         bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
@@ -170,15 +170,15 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
         (bool success, ) = _registry.call(
             abi.encodeWithSignature(
-                "initialize(address,address,address)",
-                implementation,
+                "initialize(address,address,bytes)",
+                msg.sender,
                 accountImplementation,
-                msg.sender
+                accountInitData
             )
         );
         if (!success) revert InitializationFailed();
 
-        emit AccountRegistryCreated(_registry, implementation, index);
+        emit AccountRegistryCreated(_registry, accountImplementation, index);
 
         return _registry;
     }
@@ -193,7 +193,6 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         return bytes32(abi.encodePacked(deployer, index));
     }
 }
-
 ```
 
 ### Account Registry
@@ -228,45 +227,39 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
     error ClaimFailed();
     error Unauthorized();
 
-    address public implementation;
     address public accountImplementation;
-    Signer private signer;
+    bytes public accountInitData;
+    Signer public signer;
 
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
-        address implementation_,
+        address owner,
         address accountImplementation_,
-        address owner
+        bytes calldata accountInitData_
     ) external initializer {
-        implementation = implementation_;
-        accountImplementation = accountImplementation_;
         _transferOwnership(owner);
+        accountImplementation = accountImplementation_;
+        accountInitData = accountInitData_;
     }
 
     /**
      * @dev See {IAccountRegistry-createAccount}
      */
     function createAccount(uint256 salt) external override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(accountImplementation);
         address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
 
         if (_account.isDeployed()) return _account;
 
         _account = Create2.deploy(0, bytes32(salt), code);
 
-        (bool success, ) = _account.call(
-            abi.encodeWithSignature(
-                "initialize(address,bytes)",
-                accountImplementation,
-                abi.encodeWithSignature("initialize(address)", address(this))
-            )
-        );
+        (bool success, ) = _account.call(accountInitData);
         if (!success) revert InitializationFailed();
 
-        emit AccountCreated(_account, implementation, salt);
+        emit AccountCreated(_account, accountImplementation, salt);
 
         return _account;
     }
@@ -297,7 +290,7 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-account}
      */
     function account(uint256 salt) external view override returns (address) {
-        bytes memory code = ERC1167ProxyBytecode.createCode(implementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(accountImplementation);
         return Create2.computeAddress(bytes32(salt), keccak256(code));
     }
 
@@ -320,10 +313,6 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
         }
         signer.account = newSigner;
         signer.isContract = signerSize > 0;
-    }
-
-    function updateAccountImplementation(address accountImplementation_) external onlyOwner {
-        accountImplementation = accountImplementation_;
     }
 
     function _verify(
@@ -373,7 +362,6 @@ import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import {Initializable} from "openzeppelin/proxy/utils/Initializable.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
-import {IAccountRegistry} from "../../interfaces/IAccountRegistry.sol";
 import {IERC1967Account} from "./IERC1967Account.sol";
 
 /**
@@ -395,9 +383,9 @@ contract ERC1967AccountImplementation is
         _disableInitializers();
     }
 
-    function initialize(address registry_) external initializer {
-        registry = registry_;
-        _transferOwnership(registry_);
+    function initialize() external initializer {
+        registry = msg.sender;
+        _transferOwnership(registry);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
@@ -456,7 +444,7 @@ contract ERC1967AccountImplementation is
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         if (owner() == registry) {
-            return IAccountRegistry(registry).isValidSignature(hash, signature);
+            return IERC1271(registry).isValidSignature(hash, signature);
         }
 
         bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
@@ -467,7 +455,6 @@ contract ERC1967AccountImplementation is
         return "";
     }
 }
-
 ```
 
 ## Security Considerations

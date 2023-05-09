@@ -2,12 +2,12 @@
 pragma solidity ^0.8.13;
 
 interface IAccountRegistryFactory {
-    event AccountRegistryCreated(address registry, address implementation, uint96 index);
+    event AccountRegistryCreated(address registry, address accountImplementation, uint96 index);
 
     function createRegistry(
-        address implementation,
+        uint96 index,
         address accountImplementation,
-        uint96 index
+        bytes calldata accountInitData
     ) external returns (address);
 
     function registry(address deployer, uint96 index) external view returns (address);

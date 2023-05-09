@@ -34,9 +34,9 @@ contract ERC1967AccountImplementation is
         _disableInitializers();
     }
 
-    function initialize(address registry_) external initializer {
-        registry = registry_;
-        _transferOwnership(registry_);
+    function initialize() external initializer {
+        registry = msg.sender;
+        _transferOwnership(registry);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {

@@ -10,8 +10,8 @@ import {Clones} from "openzeppelin/proxy/Clones.sol";
 
 contract AccountRegistryTest is Test {
     AccountRegistryImplementation internal registry;
-    ERC1967AccountImplementation internal implementation;
-    ERC1967AccountProxy internal proxy;
+    ERC1967AccountImplementation internal accountImplementation;
+    ERC1967AccountProxy internal accountImplementationProxy;
     address internal signer;
     uint256 internal signerPrivateKey;
     address internal accountOwner;
@@ -20,12 +20,20 @@ contract AccountRegistryTest is Test {
         signerPrivateKey = 0x1337;
         signer = vm.addr(signerPrivateKey);
         accountOwner = vm.addr(1);
-        implementation = new ERC1967AccountImplementation();
-        proxy = new ERC1967AccountProxy();
+        accountImplementation = new ERC1967AccountImplementation();
+        accountImplementationProxy = new ERC1967AccountProxy();
         registry = AccountRegistryImplementation(
             Clones.clone(address(new AccountRegistryImplementation()))
         );
-        registry.initialize(address(proxy), address(implementation), address(this));
+        registry.initialize(
+            address(this),
+            address(accountImplementationProxy),
+            abi.encodeWithSignature(
+                "initialize(address,bytes)",
+                address(accountImplementation),
+                abi.encodeWithSignature("initialize()")
+            )
+        );
         registry.updateSigner(signer);
     }
 
@@ -270,6 +278,14 @@ contract AccountRegistryTest is Test {
     function test_Initialize_Reverts() public {
         vm.expectRevert("Initializable: contract is already initialized");
 
-        registry.initialize(address(implementation), address(implementation), accountOwner);
+        registry.initialize(
+            accountOwner,
+            address(accountImplementationProxy),
+            abi.encodeWithSignature(
+                "initialize(address,bytes)",
+                address(accountImplementation),
+                abi.encodeWithSignature("initialize()")
+            )
+        );
     }
 }

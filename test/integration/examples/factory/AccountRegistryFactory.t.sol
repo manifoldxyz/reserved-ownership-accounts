@@ -10,8 +10,8 @@ import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC
 contract AccountRegistryFactoryTest is Test {
     AccountRegistryImplementation internal registry;
     AccountRegistryFactory internal factory;
-    ERC1967AccountImplementation internal implementation;
-    ERC1967AccountProxy internal proxy;
+    ERC1967AccountImplementation internal accountImplementation;
+    ERC1967AccountProxy internal accountImplementationProxy;
     address internal deployer;
     address internal signer;
     uint256 internal signerPrivateKey;
@@ -23,8 +23,8 @@ contract AccountRegistryFactoryTest is Test {
         deployer = vm.addr(1);
         accountOwner = vm.addr(2);
         factory = new AccountRegistryFactory();
-        implementation = new ERC1967AccountImplementation();
-        proxy = new ERC1967AccountProxy();
+        accountImplementation = new ERC1967AccountImplementation();
+        accountImplementationProxy = new ERC1967AccountProxy();
         registry = new AccountRegistryImplementation();
         vm.etch(0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94, address(registry).code);
     }
@@ -34,7 +34,17 @@ contract AccountRegistryFactoryTest is Test {
 
         vm.startPrank(deployer);
         AccountRegistryImplementation newRegistry = AccountRegistryImplementation(
-            payable(factory.createRegistry(address(proxy), address(implementation), index))
+            payable(
+                factory.createRegistry(
+                    index,
+                    address(accountImplementationProxy),
+                    abi.encodeWithSignature(
+                        "initialize(address,bytes)",
+                        accountImplementation,
+                        abi.encodeWithSignature("initialize()")
+                    )
+                )
+            )
         );
         newRegistry.updateSigner(signer);
         vm.stopPrank();
