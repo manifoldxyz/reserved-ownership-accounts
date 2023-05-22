@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
-interface IAccount {
+import {IERC1271} from "openzeppelin/interfaces/IERC1271.sol";
+
+interface IAccount is IERC1271 {
     /**
      * @dev Sets the owner of the Account Instance.
      *

@@ -27,7 +27,6 @@ contract ERC1967AccountImplementation is
     IERC721Receiver,
     IERC1155Receiver,
     IERC1967Account,
-    IERC1271,
     Initializable,
     Ownable
 {
