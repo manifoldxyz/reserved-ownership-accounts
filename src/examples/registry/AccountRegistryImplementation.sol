@@ -96,6 +96,11 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-isValidSignature}
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        require(
+            hash == keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n84", msg.sender)),
+            "Invalid hash"
+        );
+
         bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
         if (isValid) {
             return IERC1271.isValidSignature.selector;

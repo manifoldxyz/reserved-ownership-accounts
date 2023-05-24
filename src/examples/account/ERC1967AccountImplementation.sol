@@ -104,11 +104,6 @@ contract ERC1967AccountImplementation is
     receive() external payable {}
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        require(
-            hash == keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n84", address(this))),
-            "Invalid hash"
-        );
-
         if (owner() == registry) {
             return IERC1271(registry).isValidSignature(hash, signature);
         }
