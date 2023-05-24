@@ -96,7 +96,12 @@ contract AccountRegistryImplementation is Ownable, Initializable, IAccountRegist
      * @dev See {IAccountRegistry-isValidSignature}
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        bool isValid = SignatureChecker.isValidSignatureNow(signer.account, hash, signature);
+        bytes32 expectedHash = keccak256(abi.encodePacked(hash, msg.sender));
+        bool isValid = SignatureChecker.isValidSignatureNow(
+            signer.account,
+            expectedHash,
+            signature
+        );
         if (isValid) {
             return IERC1271.isValidSignature.selector;
         }

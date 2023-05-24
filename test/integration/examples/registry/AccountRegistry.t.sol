@@ -65,7 +65,52 @@ contract AccountRegistryTest is Test {
 
     function testERC6492SignatureVerification() public {
         uint256 salt = 1;
-        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n84", salt));
+        address accountAddress = registry.account(salt);
+        bytes32 message = keccak256("Arbitrary message");
+        bytes32 messageToSign = keccak256(abi.encodePacked(message, accountAddress));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, messageToSign);
+
+        UniversalSigValidator universalSigValidator = new UniversalSigValidator();
+
+        bytes32 erc6492DetectionSuffix = 0x6492649264926492649264926492649264926492649264926492649264926492;
+        bytes memory _calldata = abi.encodeWithSelector(
+            IAccountRegistry.createAccount.selector,
+            salt
+        );
+        bytes memory sig = abi.encodePacked(
+            abi.encode(address(registry), _calldata, abi.encodePacked(r, s, v)),
+            erc6492DetectionSuffix
+        );
+
+        assertTrue(universalSigValidator.isValidSig(accountAddress, message, sig));
+    }
+
+    function testERC6492SignatureVerification_InvalidWhen_DifferentAccountInSignature() public {
+        uint256 salt = 1;
+        address accountAddress = registry.account(salt);
+        bytes32 message = keccak256("Arbitrary message");
+        bytes32 messageToSign = keccak256(abi.encodePacked(message, registry.account(2)));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, messageToSign);
+
+        UniversalSigValidator universalSigValidator = new UniversalSigValidator();
+
+        bytes32 erc6492DetectionSuffix = 0x6492649264926492649264926492649264926492649264926492649264926492;
+        bytes memory _calldata = abi.encodeWithSelector(
+            IAccountRegistry.createAccount.selector,
+            salt
+        );
+        bytes memory sig = abi.encodePacked(
+            abi.encode(address(registry), _calldata, abi.encodePacked(r, s, v)),
+            erc6492DetectionSuffix
+        );
+
+        assertFalse(universalSigValidator.isValidSig(accountAddress, message, sig));
+    }
+
+    function testERC6492SignatureVerification_InvalidWhen_NoAccountInSignature() public {
+        uint256 salt = 1;
+        address accountAddress = registry.account(salt);
+        bytes32 message = keccak256("Arbitrary message");
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
 
         UniversalSigValidator universalSigValidator = new UniversalSigValidator();
@@ -80,6 +125,49 @@ contract AccountRegistryTest is Test {
             erc6492DetectionSuffix
         );
 
-        assertTrue(universalSigValidator.isValidSig(registry.account(salt), message, sig));
+        assertFalse(universalSigValidator.isValidSig(accountAddress, message, sig));
+    }
+
+    function testUnclaimedAccountSignatureVerification() public {
+        uint256 salt = 1;
+        address accountAddress = registry.createAccount(salt);
+        bytes32 message = keccak256("Arbitrary message");
+        bytes32 messageToSign = keccak256(abi.encodePacked(message, accountAddress));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, messageToSign);
+
+        UniversalSigValidator universalSigValidator = new UniversalSigValidator();
+
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        assertTrue(universalSigValidator.isValidSig(accountAddress, message, sig));
+    }
+
+    function testUnclaimedAccountSignatureVerification_InvalidWhen_DifferentAccountInSignature()
+        public
+    {
+        uint256 salt = 1;
+        address accountAddress = registry.createAccount(salt);
+        bytes32 message = keccak256("Arbitrary message");
+        bytes32 messageToSign = keccak256(abi.encodePacked(message, registry.account(2)));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, messageToSign);
+
+        UniversalSigValidator universalSigValidator = new UniversalSigValidator();
+
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        assertFalse(universalSigValidator.isValidSig(accountAddress, message, sig));
+    }
+
+    function testUnclaimedAccountSignatureVerification_InvalidWhen_NoAccountInSignature() public {
+        uint256 salt = 1;
+        address accountAddress = registry.createAccount(salt);
+        bytes32 message = keccak256("Arbitrary message");
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
+
+        UniversalSigValidator universalSigValidator = new UniversalSigValidator();
+
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        assertFalse(universalSigValidator.isValidSig(accountAddress, message, sig));
     }
 }
