@@ -65,7 +65,8 @@ contract AccountRegistryTest is Test {
 
     function testERC6492SignatureVerification() public {
         uint256 salt = 1;
-        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n84", salt));
+        address account = registry.account(salt);
+        bytes32 message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n84", account));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, message);
 
         UniversalSigValidator universalSigValidator = new UniversalSigValidator();
@@ -80,6 +81,6 @@ contract AccountRegistryTest is Test {
             erc6492DetectionSuffix
         );
 
-        assertTrue(universalSigValidator.isValidSig(registry.account(salt), message, sig));
+        assertTrue(universalSigValidator.isValidSig(account, message, sig));
     }
 }
