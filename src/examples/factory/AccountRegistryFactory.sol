@@ -14,7 +14,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     error InitializationFailed();
 
-    address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
+    address private immutable _registryImplementation = 0x804b223Abc0b810B3FAD2980d17E31DAb3A4E9DB;
 
     function createRegistry(
         uint96 index,
@@ -22,7 +22,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
         bytes calldata accountInitData
     ) external returns (address) {
         bytes32 salt = _getSalt(msg.sender, index);
-        bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(_registryImplementation);
         address _registry = Create2.computeAddress(salt, keccak256(code));
 
         if (_registry.isDeployed()) return _registry;
@@ -46,7 +46,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     function registry(address deployer, uint96 index) external view override returns (address) {
         bytes32 salt = _getSalt(deployer, index);
-        bytes memory code = ERC1167ProxyBytecode.createCode(registryImplementation);
+        bytes memory code = ERC1167ProxyBytecode.createCode(_registryImplementation);
         return Create2.computeAddress(salt, keccak256(code));
     }
 

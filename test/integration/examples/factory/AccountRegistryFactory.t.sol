@@ -26,7 +26,7 @@ contract AccountRegistryFactoryTest is Test {
         accountImplementation = new ERC1967AccountImplementation();
         accountImplementationProxy = new ERC1967AccountProxy();
         registry = new AccountRegistryImplementation();
-        vm.etch(0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94, address(registry).code);
+        vm.etch(0x804b223Abc0b810B3FAD2980d17E31DAb3A4E9DB, address(registry).code);
     }
 
     function testCreateRegistryAndAccount() public {

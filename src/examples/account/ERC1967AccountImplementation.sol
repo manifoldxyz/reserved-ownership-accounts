@@ -34,6 +34,7 @@ contract ERC1967AccountImplementation is
 
     constructor() {
         _disableInitializers();
+        _transferOwnership(address(0));
     }
 
     function initialize() external initializer {
