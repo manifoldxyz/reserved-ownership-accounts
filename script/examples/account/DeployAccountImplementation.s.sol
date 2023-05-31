@@ -3,14 +3,14 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 
-import {AccountRegistryImplementation} from "../../../src/examples/registry/AccountRegistryImplementation.sol";
+import {ERC1967AccountImplementation} from "../../../src/examples/account/ERC1967AccountImplementation.sol";
 
-contract DeployRegistry is Script {
+contract DeployAccountImplementation is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        new AccountRegistryImplementation{
+        new ERC1967AccountImplementation{
             salt: 0x6981698169816981698169816981698169816981698169816981698169816981
         }();
 

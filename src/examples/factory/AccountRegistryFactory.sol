@@ -14,7 +14,7 @@ contract AccountRegistryFactory is IAccountRegistryFactory {
 
     error InitializationFailed();
 
-    address private immutable registryImplementation = 0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94;
+    address private immutable registryImplementation = 0xAE669d2D218fcc602301ea39B2cfec436Ce8d05e;
 
     function createRegistry(
         uint96 index,

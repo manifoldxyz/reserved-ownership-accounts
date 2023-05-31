@@ -11,7 +11,7 @@ contract DeployRegistryFactory is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         new AccountRegistryFactory{
-            salt: 0x1337133713371337133713371337133713371337133713371337133713371337
+            salt: 0x6981698169816981698169816981698169816981698169816981698169816981
         }();
 
         vm.stopBroadcast();

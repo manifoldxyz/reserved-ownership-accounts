@@ -86,6 +86,30 @@ contract ERC1967AccountImplementation is
         uint256 _value,
         bytes calldata _data
     ) external payable override onlyOwner returns (bytes memory _result) {
+        return _executeCall(_target, _value, _data);
+    }
+
+    /**
+     * @dev {See IERC1967Account-batchExecuteCall}
+     */
+    function batchExecuteCall(
+        CallParams[] calldata _callParams
+    ) external payable override onlyOwner returns (bytes[] memory _results) {
+        _results = new bytes[](_callParams.length);
+        for (uint256 i = 0; i < _callParams.length; i++) {
+            _results[i] = _executeCall(
+                _callParams[i].to,
+                _callParams[i].value,
+                _callParams[i].data
+            );
+        }
+    }
+
+    function _executeCall(
+        address _target,
+        uint256 _value,
+        bytes calldata _data
+    ) internal returns (bytes memory _result) {
         bool success;
         // solhint-disable-next-line avoid-low-level-calls
         (success, _result) = _target.call{value: _value}(_data);

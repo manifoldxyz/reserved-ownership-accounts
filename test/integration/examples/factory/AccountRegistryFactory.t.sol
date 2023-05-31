@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 import {AccountRegistryImplementation} from "../../../../src/examples/registry/AccountRegistryImplementation.sol";
 import {AccountRegistryFactory} from "../../../../src/examples/factory/AccountRegistryFactory.sol";
 import {ERC1967AccountProxy} from "../../../../src/examples/account/ERC1967AccountProxy.sol";
@@ -26,11 +27,20 @@ contract AccountRegistryFactoryTest is Test {
         accountImplementation = new ERC1967AccountImplementation();
         accountImplementationProxy = new ERC1967AccountProxy();
         registry = new AccountRegistryImplementation();
-        vm.etch(0x076B08EDE2B28fab0c1886F029cD6d02C8fF0E94, address(registry).code);
+        vm.etch(0xAE669d2D218fcc602301ea39B2cfec436Ce8d05e, address(registry).code);
     }
 
     function testCreateRegistryAndAccount() public {
         uint96 index = 1;
+
+        console.log("test");
+        console.logBytes(
+            abi.encodeWithSignature(
+                "initialize(address,bytes)",
+                0xf1dbDD0A94c950a9e44Cec7394336c5707726470,
+                abi.encodeWithSignature("initialize()")
+            )
+        );
 
         vm.startPrank(deployer);
         AccountRegistryImplementation newRegistry = AccountRegistryImplementation(

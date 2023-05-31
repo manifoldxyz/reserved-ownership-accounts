@@ -21,6 +21,10 @@ contract MockAccount is IERC1967Account, IERC165 {
         revert("disabled");
     }
 
+    function batchExecuteCall(CallParams[] calldata) external payable returns (bytes[] memory) {
+        revert("disabled");
+    }
+
     function owner() public pure returns (address) {
         revert("disabled");
     }

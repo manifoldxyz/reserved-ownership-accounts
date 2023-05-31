@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC1967Account as Acc} from "../../../../src/examples/account/IERC1967Account.sol";
 import {ERC1967AccountImplementation} from "../../../../src/examples/account/ERC1967AccountImplementation.sol";
 import {Clones} from "openzeppelin/proxy/Clones.sol";
 
@@ -75,6 +76,19 @@ contract ExampleAccountImplementationTest is Test {
 
         assertEq(address(accountImplementation).balance, 0.5 ether);
         assertEq(accountOwner.balance, 0.5 ether);
+    }
+
+    function testBatchExecuteCall() public {
+        vm.deal(address(accountImplementation), 1 ether);
+        vm.prank(accountOwner);
+        Acc.CallParams[] memory params = new Acc.CallParams[](2);
+        params[0] = Acc.CallParams({to: payable(accountOwner), value: 0.5 ether, data: ""});
+        params[1] = Acc.CallParams({to: payable(accountOwner), value: 0.5 ether, data: ""});
+
+        accountImplementation.batchExecuteCall(params);
+
+        assertEq(address(accountImplementation).balance, 0 ether);
+        assertEq(accountOwner.balance, 1 ether);
     }
 
     function testExecuteCall_RevertWhen_SenderNotOwner() public {
